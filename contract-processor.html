@@ -3399,7 +3399,7 @@ function contractToContributorRows(c, itemType) {
 function exportContributorsCSV() {
   if (contracts.length === 0) return;
 
-  var lines = [];
+  var lines = [CONTRIBUTOR_HEADERS.map(csvEscape).join(',')];
   contracts.forEach(function(c) {
     syncItemsToLegacyFields(c);
     if (c.isChoral) {
