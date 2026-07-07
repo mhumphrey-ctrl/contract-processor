@@ -2356,10 +2356,27 @@ function acceptContribSuggestion(cardId, idx, val) {
   renderContributorsTab(c, cardId, panel);
 }
 
+function recalcPrimaryLastName(c) {
+  const arrContrib = c.contributors.find(x => x.role === 'Arranger');
+  const refContrib  = arrContrib || (c.contributors.length > 0 ? c.contributors[0] : null);
+  if (refContrib) {
+    if (refContrib._dbLastName) {
+      c.primaryLastName = refContrib._dbLastName;
+    } else {
+      const parts = (refContrib.name || '').trim().split(/\s+/);
+      c.primaryLastName = parts[parts.length - 1] || '';
+    }
+  } else {
+    c.primaryLastName = '';
+  }
+}
+
 function updateContrib(cardId, idx, field, val) {
   const c = contracts.find(x => x._id === cardId);
   if (!c) return;
   c.contributors[idx][field] = val;
+  // Keep Ed catalog style in sync whenever name or role changes
+  if (field === 'name' || field === 'role') recalcPrimaryLastName(c);
 }
 
 function onContribNameInput(cardId, idx, val) {
