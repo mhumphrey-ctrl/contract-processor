@@ -2963,7 +2963,7 @@ const CSV_HEADERS = [
   'MusicalForm','Era','Genre','Occasion','Special Features','Keywords',
   'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures',
   'Comp arr trans artist','ContributorHyperlink','Ed catalog style','Series','SeriesBlurb',
-  'pubnum'
+  'pubnum','Scan File Name','itemnum','PLS Assigned'
 ];
 
 const EMPTY_FIELDS = new Set([
@@ -3068,6 +3068,12 @@ function contractToRow(c, itemType) {
   row['Comp arr trans artist'] = c.creditLine || '';
   row['ContributorHyperlink'] = c.contributors.filter(x => x.name).map(x => x.name).join('; ');
   row['Ed catalog style'] = c.primaryLastName || '';
+
+  // Scan File Name, itemnum, PLS Assigned
+  var scanPub = String(parseInt(c.pub_num) || 0).padStart(2, '0');
+  row['Scan File Name'] = thisItem ? (scanPub + '-' + thisItem) : '';
+  row['itemnum']        = thisItem ? ('(' + thisItem + ')') : '';
+  row['PLS Assigned']   = c.isRWS ? 'Chelsey U.' : 'Chase B.';
 
   return row;
 }
@@ -3258,6 +3264,11 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   row['Comp arr trans artist'] = c.creditLine || '';
   row['ContributorHyperlink']  = c.contributors.filter(function(x){ return x.name; }).map(function(x){ return x.name; }).join('; ');
   row['Ed catalog style']      = c.primaryLastName || '';
+
+  // Scan File Name, itemnum, PLS Assigned
+  row['Scan File Name'] = voicing.itemnum ? ('00-' + voicing.itemnum) : '';
+  row['itemnum']        = voicing.itemnum ? ('(' + voicing.itemnum + ')') : '';
+  row['PLS Assigned']   = 'Krista H.';
 
   return row;
 }
