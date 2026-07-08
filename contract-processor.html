@@ -499,9 +499,34 @@ function parseLevel(levelStr) {
   s = s.replace(/[()]/g, '').replace(/[\s\-–]+$/, '').trim();
   const gradeM = s.match(/grade\s*([\d.]+)/i);
   const levelM = s.match(/level\s*([\d.]+)/i);
-  const numM   = s.match(/^([\d.]+)$/);
+  const numM   = s.match(/^([\d.]+(?:\s*[-–]\s*[\d.]+)?)$/);  // handles single or range
   const gradeNum = gradeM ? gradeM[1] : (levelM ? levelM[1] : (numM ? numM[1] : ''));
   return { level: s, gradeNum };
+}
+
+function gradeToWebGradeLabel(num) {
+  var n = parseFloat(num);
+  if (isNaN(n)) return '';
+  if (n >= 6) return '6+';
+  var whole = Math.floor(n);
+  var isFrac = Math.round((n - whole) * 10) === 5;
+  if (isFrac) return whole === 0 ? '½' : whole + '½';
+  return String(whole);
+}
+
+function levelToWebGrade(levelStr) {
+  if (!levelStr) return '';
+  var s = String(levelStr).trim();
+  var rangeM = s.match(/^([\d.]+)\s*[-–]\s*([\d.]+)$/);
+  if (rangeM) {
+    var lo = gradeToWebGradeLabel(rangeM[1]);
+    var hi = gradeToWebGradeLabel(rangeM[2]);
+    if (!lo && !hi) return '';
+    if (lo === hi || !hi) return lo;
+    if (!lo) return hi;
+    return lo + '\r' + hi;
+  }
+  return gradeToWebGradeLabel(s);
 }
 
 function csvEscape(val) {
@@ -2441,7 +2466,13 @@ function getContributors() {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Merge with BASE_CONTRIBUTORS so built-ins are always recognized
+        const baseSet = new Set((BASE_CONTRIBUTORS || []).map(n => n.toLowerCase()));
+        const merged = (BASE_CONTRIBUTORS || []).slice();
+        parsed.forEach(function(n) { if (n && !baseSet.has(n.toLowerCase())) merged.push(n); });
+        return merged;
+      }
     } catch(e) {}
   }
   return [...(BASE_CONTRIBUTORS || [])];
@@ -2462,7 +2493,18 @@ function addContributorToDb(name) {
 
 function getSeries() {
   var stored = localStorage.getItem('cp_series');
-  if (stored) { try { return JSON.parse(stored); } catch(e) {} }
+  if (stored) {
+    try {
+      var parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Merge with BASE_SERIES so built-ins are always recognized
+        var baseSet = new Set(BASE_SERIES.map(function(s) { return s.toLowerCase(); }));
+        var merged = BASE_SERIES.slice();
+        parsed.forEach(function(s) { if (s && !baseSet.has(s.toLowerCase())) merged.push(s); });
+        return merged;
+      }
+    } catch(e) {}
+  }
   return BASE_SERIES.slice();
 }
 
@@ -2956,14 +2998,14 @@ const CSV_HEADERS = [
   'Xitemnum','Prices Popular','WebFormat','WebProductType','WebProductSubType','Language',
   'webdescription','shortdescription','Product line','WebInstrumentGroup','WebInstrument',
   'WebEnsemble','WebDefinition','instrument','Instrumentation','FMcategory','InfoBeforePrice',
-  'Level','WebSubLevel','GradeNum','WebSource','WebChoirVoicing','WebVoice','NAMMCodeName',
+  'Level','WebSubLevel','GradeNum','WebGrade','WebSource','WebChoirVoicing','WebVoice','NAMMCodeName',
   'NAMMCodeLevel1','NAMMCodeLevel2','NAMMCodeLevel3','NAMMCodeLevel4','NAMMCode','RetailUpCode',
   'BISAC1Def','BISAC1_CODE_REVERSELOOKUP','BISAC2Def','BISAC2_CODE_REVERSELOOKUP',
   'BISAC3Def','BISAC3_CODE_REVERSELOOKUP','Duration','Edition','Holiday','Season',
   'MusicalForm','Era','Genre','Occasion','Special Features','Keywords',
   'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures',
   'Comp arr trans artist','ContributorHyperlink','Ed catalog style','Series','SeriesBlurb',
-  'pubnum','Scan File Name','itemnum','PLS Assigned'
+  'pubnum','Scan File Name','itemnum','PLS Assigned','New Issue Codes Teams'
 ];
 
 const EMPTY_FIELDS = new Set([
@@ -2976,7 +3018,8 @@ const EMPTY_FIELDS = new Set([
 const MULTIVALUE_FIELDS = new Set([
   'WebFormat','WebProductType','WebProductSubType','WebEnsemble','Holiday','MusicalForm',
   'Genre','Special Features','Occasion','Season','Era','WebSource',
-  'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures'
+  'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures',
+  'WebGrade'
 ]);
 
 function contractToRow(c, itemType) {
@@ -3007,6 +3050,7 @@ function contractToRow(c, itemType) {
   row['Subtitle'] = c.subtitle || '';
   row['Level'] = c.level || '';
   row['GradeNum'] = c.gradeNum ? '(' + c.gradeNum + ')' : '';
+  row['WebGrade'] = levelToWebGrade(c.gradeNum || c.level);
   row['Duration'] = isScore ? '' : (c.duration || '');
   row['Series'] = c.series || '';
 
@@ -3074,6 +3118,10 @@ function contractToRow(c, itemType) {
   row['Scan File Name'] = thisItem ? (scanPub + '-' + thisItem) : '';
   row['itemnum']        = thisItem ? ('(' + thisItem + ')') : '';
   row['PLS Assigned']   = c.isRWS ? 'Chelsey U.' : 'Chase B.';
+
+  // TODO: When new product types are added (e.g. piano, guitar, etc.), revisit this field.
+  // Current rules: RWS/Wilfin → 'Dist - ready' | other band/orch → 'BOP - ready'
+  row['New Issue Codes Teams'] = (c.isRWS || c.isWilfin) ? 'Dist - ready' : 'BOP - ready';
 
   return row;
 }
@@ -3269,6 +3317,9 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   row['Scan File Name'] = voicing.itemnum ? ('00-' + voicing.itemnum) : '';
   row['itemnum']        = voicing.itemnum ? ('(' + voicing.itemnum + ')') : '';
   row['PLS Assigned']   = 'Krista H.';
+
+  // TODO: When new product types are added, revisit New Issue Codes Teams.
+  row['New Issue Codes Teams'] = 'Choral - ready';
 
   return row;
 }
