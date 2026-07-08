@@ -151,10 +151,15 @@ input, textarea, select { font-family: inherit; }
 .blurb-section { margin-bottom: 20px; }
 .blurb-section-label { font-size: 0.78rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; display: flex; justify-content: space-between; }
 .blurb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.blurb-col-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; }
+.blurb-col-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; min-height: 22px; display: flex; align-items: center; }
 .blurb-ro { background: #f5f7fa; border: 1px solid #e0e4ea; border-radius: 6px; padding: 8px 10px; min-height: 80px; font-size: 0.85rem; color: #555; white-space: pre-wrap; word-break: break-word; }
 .blurb-textarea { width: 100%; border: 1px solid #d0d4da; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; resize: vertical; min-height: 80px; }
 .blurb-textarea:focus { outline: none; border-color: #2563eb; }
+.blurb-error { margin-top: 4px; font-size: 0.78rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 4px; padding: 4px 8px; display: none; }
+.blurb-error.visible { display: block; }
+.blurb-toolbar { display: flex; gap: 4px; margin-bottom: 4px; }
+.blurb-tag-btn { font-size: 0.78rem; padding: 2px 8px; border: 1px solid #d0d4da; border-radius: 4px; background: #f5f7fa; cursor: pointer; line-height: 1.4; }
+.blurb-tag-btn:hover { background: #e8edf5; border-color: #2563eb; }
 .char-count { font-size: 0.73rem; color: #aaa; }
 
 /* ===== TAGS TAB ===== */
@@ -1733,8 +1738,8 @@ function parseExcel(buffer, filename) {
       primaryLastName,
       sortKey,
       short_blurb, long_blurb,
-      short_blurb_final: short_blurb,
-      long_blurb_final: long_blurb,
+      short_blurb_final: sanitizeBlurb(short_blurb),
+      long_blurb_final: sanitizeBlurb(long_blurb),
       tagData,
       eFields,
       allWarnings,
@@ -2647,8 +2652,14 @@ function populateBlurbsTab(c, cardId) {
           <div class="blurb-ro">${escHtml(c.long_blurb || '(none)')}</div>
         </div>
         <div>
-          <div class="blurb-col-label">Final output</div>
-          <textarea class="blurb-textarea" oninput="updateBlurb('${cardId}','long',this.value,this)">${escHtml(c.long_blurb_final||'')}</textarea>
+          <div class="blurb-col-label" style="display:flex;align-items:center;gap:6px;">
+            <span>Final output</span>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="wrapBlurbTag('${cardId}-lb-textarea','${cardId}','long','&lt;i&gt;','&lt;/i&gt;')"><i>Italic</i></button>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="wrapBlurbTag('${cardId}-lb-textarea','${cardId}','long','&lt;b&gt;','&lt;/b&gt;')"><b>Bold</b></button>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="insertBlurbText('${cardId}-lb-textarea','&lt;br&gt;')">Line Break</button>
+          </div>
+          <textarea id="${cardId}-lb-textarea" class="blurb-textarea" oninput="updateBlurb('${cardId}','long',this.value,this)">${escHtml(c.long_blurb_final||'')}</textarea>
+          <div class="blurb-error" id="${cardId}-lb-error"></div>
         </div>
       </div>
     </div>
@@ -2663,26 +2674,91 @@ function populateBlurbsTab(c, cardId) {
           <div class="blurb-ro">${escHtml(c.short_blurb || '(none)')}</div>
         </div>
         <div>
-          <div class="blurb-col-label">Final output</div>
-          <textarea class="blurb-textarea" oninput="updateBlurb('${cardId}','short',this.value,this)">${escHtml(c.short_blurb_final||'')}</textarea>
+          <div class="blurb-col-label" style="display:flex;align-items:center;gap:6px;">
+            <span>Final output</span>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="wrapBlurbTag('${cardId}-sb-textarea','${cardId}','short','&lt;i&gt;','&lt;/i&gt;')"><i>Italic</i></button>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="wrapBlurbTag('${cardId}-sb-textarea','${cardId}','short','&lt;b&gt;','&lt;/b&gt;')"><b>Bold</b></button>
+            <button class="blurb-tag-btn" onmousedown="event.preventDefault()" onclick="insertBlurbText('${cardId}-sb-textarea','&lt;br&gt;')">Line Break</button>
+          </div>
+          <textarea id="${cardId}-sb-textarea" class="blurb-textarea" oninput="updateBlurb('${cardId}','short',this.value,this)">${escHtml(c.short_blurb_final||'')}</textarea>
+          <div class="blurb-error" id="${cardId}-sb-error"></div>
         </div>
       </div>
     </div>
   `;
 }
 
-function updateBlurb(cardId, which, val) {
+function sanitizeBlurb(val) {
+  return val
+    .replace(/[“”]/g, '"')    // smart double quotes → "
+    .replace(/[‘’]/g, "'")    // smart single quotes → '
+    .replace(/—/g, '---')          // em-dash → ---
+    .replace(/–/g, '--');          // en-dash → --
+}
+
+function checkBlurbErrors(val) {
+  var problems = [];
+  if (/\r/.test(val))              problems.push('carriage return');
+  if (/…/.test(val))          problems.push('ellipsis (…)');
+  if (/[•‣⁃●◦‧·]/.test(val)) problems.push('bullet character');
+  if (/\t/.test(val))              problems.push('tab character');
+  return problems;
+}
+
+function updateBlurb(cardId, which, val, el) {
   const c = contracts.find(x => x._id === cardId);
   if (!c) return;
-  if (which === 'long') {
-    c.long_blurb_final = val;
-    const el = document.getElementById(`${cardId}-lb-count`);
-    if (el) el.textContent = `${val.length} chars`;
-  } else {
-    c.short_blurb_final = val;
-    const el = document.getElementById(`${cardId}-sb-count`);
-    if (el) el.textContent = `${val.length} chars`;
+
+  // Auto-sanitize: smart quotes and dashes
+  const sanitized = sanitizeBlurb(val);
+  if (el && sanitized !== val) {
+    const cursor = el.selectionStart;
+    const delta  = sanitized.length - val.length;
+    el.value = sanitized;
+    el.selectionStart = el.selectionEnd = Math.max(0, cursor + delta);
+    val = sanitized;
   }
+
+  // Update contract
+  const prefix = which === 'long' ? 'long' : 'short';
+  c[prefix + '_blurb_final'] = val;
+
+  // Char count
+  const countEl = document.getElementById(`${cardId}-${which === 'long' ? 'lb' : 'sb'}-count`);
+  if (countEl) countEl.textContent = `${val.length} chars`;
+
+  // Error indicator
+  const errorEl = document.getElementById(`${cardId}-${which === 'long' ? 'lb' : 'sb'}-error`);
+  if (errorEl) {
+    const problems = checkBlurbErrors(val);
+    if (problems.length) {
+      errorEl.textContent = '⚠ Contains: ' + problems.join(', ');
+      errorEl.classList.add('visible');
+    } else {
+      errorEl.textContent = '';
+      errorEl.classList.remove('visible');
+    }
+  }
+}
+
+function insertBlurbText(textareaId, text) {
+  const el = document.getElementById(textareaId);
+  if (!el) return;
+  el.focus();
+  document.execCommand('insertText', false, text);
+}
+
+function wrapBlurbTag(textareaId, cardId, which, openTag, closeTag) {
+  const el = document.getElementById(textareaId);
+  if (!el) return;
+  const start    = el.selectionStart;
+  const end      = el.selectionEnd;
+  const selected = el.value.substring(start, end);
+  el.focus();
+  // insertText integrates with the browser's undo stack; also fires oninput automatically
+  document.execCommand('insertText', false, openTag + selected + closeTag);
+  // Re-select just the wrapped content (not the tags)
+  el.setSelectionRange(start + openTag.length, start + openTag.length + selected.length);
 }
 
 // =============================================
@@ -3087,8 +3163,8 @@ function contractToRow(c, itemType) {
   row['BISAC3_CODE_REVERSELOOKUP']    = '';
 
   // Blurbs
-  row['webdescription'] = c.long_blurb_final || '';
-  row['shortdescription'] = c.short_blurb_final || '';
+  row['webdescription'] = sanitizeBlurb(c.long_blurb_final || '');
+  row['shortdescription'] = sanitizeBlurb(c.short_blurb_final || '');
 
   // Tags — plain text fields use '; ', FM checkbox (Web*) fields use '\r'
   row['Genre']         = [...c.tags.genre].map(function(v){ return v.replace(/_/g,' '); }).join('; ');
@@ -3163,8 +3239,8 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   row['Supertitle']        = c.supertitle || '';
   row['Subtitle']          = c.subtitle || '';
   row['Series']            = c.series || '';
-  row['webdescription']    = c.long_blurb_final  || '';
-  row['shortdescription']  = c.short_blurb_final || '';
+  row['webdescription']    = sanitizeBlurb(c.long_blurb_final  || '');
+  row['shortdescription']  = sanitizeBlurb(c.short_blurb_final || '');
   row['WebProductSubType'] = 'Single_Titles';
   row['WebEnsemble']       = isSacred ? 'Choir_Sacred' : 'Choir_Secular';
   row['FMcategory']        = 'Choral Octavo';
