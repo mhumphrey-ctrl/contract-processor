@@ -717,6 +717,10 @@ function parseContributors(author1, author2, author3) {
     const rest = a1.replace(/^Words and Music by\s+/i, '');
     a1Names = splitNames(rest);
     a1Role = 'Composer';
+  } else if (a1.match(/^Words by\s+/i)) {
+    const rest = a1.replace(/^Words by\s+/i, '');
+    a1Names = splitNames(rest);
+    a1Role = 'Lyricist';
   } else if (a1.match(/^Music by\s+/i)) {
     const rest = a1.replace(/^Music by\s+/i, '');
     a1Names = splitNames(rest);
@@ -756,6 +760,10 @@ function parseContributors(author1, author2, author3) {
     const rest = a2.replace(/^Words by\s+/i, '');
     a2Names = splitNames(rest);
     a2Role = 'Lyricist';
+  } else if (a2.match(/^Music by\s+/i)) {
+    const rest = a2.replace(/^Music by\s+/i, '');
+    a2Names = splitNames(rest);
+    a2Role = 'Composer';
   } else {
     a2Names = splitNames(a2);
     a2Role = 'Arranger';
@@ -827,15 +835,33 @@ function parseContributors(author1, author2, author3) {
       const arrName = cleanForCredit(a2.replace(/^Arranged by\s+/i, ''));
       creditLine = `Words and music by ${rest} / arr. ${arrName}`;
     } else { creditLine = `Words and music by ${rest}`; }
-  } else if (a1.match(/^Music by\s+/i)) {
-    const rest = cleanForCredit(a1.replace(/^Music by\s+/i, ''));
-    if (a2.match(/^Lyrics by\s+/i)) {
-      const lyrName = cleanForCredit(a2.replace(/^Lyrics by\s+/i, ''));
+  } else if (a1.match(/^Words by\s+/i)) {
+    const rest = cleanForCredit(a1.replace(/^Words by\s+/i, ''));
+    if (a2.match(/^Music by\s+/i)) {
+      const musicName = cleanForCredit(a2.replace(/^Music by\s+/i, ''));
       if (a3 && a3.match(/^Arranged by\s+/i)) {
         const arrName = cleanForCredit(a3.replace(/^Arranged by\s+/i, ''));
-        creditLine = `Music by ${rest}, lyrics by ${lyrName} / arr. ${arrName}`;
+        creditLine = `Words by ${rest}, music by ${musicName} / arr. ${arrName}`;
       } else {
-        creditLine = `Music by ${rest} / Lyrics by ${lyrName}`;
+        creditLine = `Words by ${rest}, music by ${musicName}`;
+      }
+    } else if (a2.match(/^Arranged by\s+/i)) {
+      const arrName = cleanForCredit(a2.replace(/^Arranged by\s+/i, ''));
+      creditLine = `Words by ${rest} / arr. ${arrName}`;
+    } else {
+      creditLine = `Words by ${rest}`;
+      if (a2c && !a2.match(/^Op\./i)) creditLine += ` / ${a2c}`;
+    }
+  } else if (a1.match(/^Music by\s+/i)) {
+    const rest = cleanForCredit(a1.replace(/^Music by\s+/i, ''));
+    if (a2.match(/^Lyrics by\s+/i) || a2.match(/^Words by\s+/i)) {
+      const lyrPrefix = a2.match(/^Words by\s+/i) ? 'Words by' : 'Lyrics by';
+      const lyrName = cleanForCredit(a2.replace(/^(Lyrics|Words) by\s+/i, ''));
+      if (a3 && a3.match(/^Arranged by\s+/i)) {
+        const arrName = cleanForCredit(a3.replace(/^Arranged by\s+/i, ''));
+        creditLine = `Music by ${rest} / ${lyrPrefix} ${lyrName} / arr. ${arrName}`;
+      } else {
+        creditLine = `Music by ${rest} / ${lyrPrefix} ${lyrName}`;
       }
     } else if (a2.match(/^Arranged by\s+/i)) {
       const arrName = cleanForCredit(a2.replace(/^Arranged by\s+/i, ''));
@@ -861,15 +887,14 @@ function parseContributors(author1, author2, author3) {
     }
   }
 
-  // Primary last name — prefer the arranger (for Ed catalog style / sort key suffix)
+  // Primary last name — use the last person in the credit line (for Ed catalog style / sort key suffix)
   let primaryLastName = '';
-  const arrContrib = contributors.find(c => c.role === 'Arranger');
-  const refContrib  = arrContrib || (contributors.length > 0 ? contributors[0] : null);
+  const refContrib = contributors.length > 0 ? contributors[contributors.length - 1] : null;
   if (refContrib) {
     if (refContrib._dbLastName) {
       primaryLastName = refContrib._dbLastName;
     } else {
-      const parts = refContrib.name.split(/\s+/);
+      const parts = (refContrib.name || '').split(/\s+/);
       primaryLastName = parts[parts.length - 1];
     }
   }
@@ -2421,13 +2446,12 @@ function acceptContribSuggestion(cardId, idx, val) {
 }
 
 function recalcPrimaryLastName(c) {
-  const arrContrib = c.contributors.find(x => x.role === 'Arranger');
-  const refContrib  = arrContrib || (c.contributors.length > 0 ? c.contributors[0] : null);
-  if (refContrib) {
-    if (refContrib._dbLastName) {
-      c.primaryLastName = refContrib._dbLastName;
+  const lastContrib = c.contributors.length > 0 ? c.contributors[c.contributors.length - 1] : null;
+  if (lastContrib) {
+    if (lastContrib._dbLastName) {
+      c.primaryLastName = lastContrib._dbLastName;
     } else {
-      const parts = (refContrib.name || '').trim().split(/\s+/);
+      const parts = (lastContrib.name || '').trim().split(/\s+/);
       c.primaryLastName = parts[parts.length - 1] || '';
     }
   } else {
@@ -3115,7 +3139,8 @@ const CSV_HEADERS = [
   'MusicalForm','Era','Genre','Occasion','Special Features','Keywords',
   'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures',
   'Comp arr trans artist','ContributorHyperlink','Ed catalog style','Series','SeriesBlurb',
-  'pubnum','Scan File Name','itemnum','PLS Assigned','New Issue Codes Teams'
+  'pubnum','Scan File Name','itemnum','PLS Assigned','New Issue Codes Teams','Brand','Format','Voicing',
+  'BTradeOutput'
 ];
 
 const EMPTY_FIELDS = new Set([
@@ -3131,6 +3156,23 @@ const MULTIVALUE_FIELDS = new Set([
   'WebGenre','WebHoliday','WebSeason','WebOccasion','WebMusicalForm','WebEra','WebSpecialFeatures',
   'WebGrade'
 ]);
+
+const BTRADE_Y_FORMATS = new Set([
+  'Book', 'Book & Online Media',
+  "Teacher's Handbook & Online Audio/PDF",
+  "Teacher's Handbook & Online PDF"
+]);
+
+function getBrand(series) {
+  if (!series) return 'Alfred';
+  var s = series.trim();
+  if (/^Belwin\b/i.test(s))      return 'Belwin';
+  if (/^MakeMusic\b/i.test(s))   return 'MakeMusic Publications';
+  if (/^RWS\b/i.test(s))         return 'RWS Music Company';
+  if (/^Wilfin\b/i.test(s))      return 'Wilfin';
+  if (/^Lawson-Gould/i.test(s))  return 'Lawson-Gould';
+  return 'Alfred';
+}
 
 function contractToRow(c, itemType) {
   // itemType: 'set' or 'score'
@@ -3232,6 +3274,11 @@ function contractToRow(c, itemType) {
   // TODO: When new product types are added (e.g. piano, guitar, etc.), revisit this field.
   // Current rules: RWS/Wilfin → 'Dist - ready' | other band/orch → 'BOP - ready'
   row['New Issue Codes Teams'] = (c.isRWS || c.isWilfin) ? 'Dist - ready' : 'BOP - ready';
+
+  row['Brand']        = getBrand(c.series);
+  row['Format']       = isScore ? 'Conductor Score' : 'Conductor Score & Parts';
+  row['Voicing']      = '';    // N/A for band/orch
+  row['BTradeOutput'] = 'n';   // books not yet supported in band/orch
 
   return row;
 }
@@ -3430,6 +3477,30 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
 
   // TODO: When new product types are added, revisit New Issue Codes Teams.
   row['New Issue Codes Teams'] = 'Choral - ready';
+
+  row['Brand'] = getBrand(c.series);
+
+  // Format + Voicing: derive from voicing type (mirrors WebFormat logic above)
+  if (isDigital) {
+    row['Format']  = 'Digital Download';
+    row['Voicing'] = '';
+  } else if (isSoundTraxPhysical(voicing.name)) {
+    row['Format']  = 'CD';
+    row['Voicing'] = '';
+  } else if (isSoundPaxPhysical(voicing.name)) {
+    row['Format']  = 'Instrumental Parts';
+    row['Voicing'] = '';
+  } else {
+    row['Format']  = 'Choral Octavo';
+    // infoLabel is computed in the octavo branch above (baseLabel + optional a cappella)
+    var vKeyF = detectChoralVoicingKey(voicing.name);
+    var vCfgF = CHORAL_VOICING_CONFIG[vKeyF] || null;
+    var baseLabelF = vCfgF ? vCfgF.displayLabel : (vKeyF || voicing.name);
+    var isACappellaF = /a\s*cappella/i.test(voicing.name);
+    row['Voicing'] = isACappellaF ? baseLabelF + ' <i>a cappella</i>' : baseLabelF;
+  }
+
+  row['BTradeOutput'] = BTRADE_Y_FORMATS.has(voicing.name) ? 'y' : 'n';
 
   return row;
 }
