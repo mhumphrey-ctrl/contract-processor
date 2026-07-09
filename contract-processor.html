@@ -157,6 +157,14 @@ input, textarea, select { font-family: inherit; }
 .blurb-textarea:focus { outline: none; border-color: #2563eb; }
 .blurb-error { margin-top: 4px; font-size: 0.78rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 4px; padding: 4px 8px; display: none; }
 .blurb-error.visible { display: block; }
+.new-entries-section { margin-bottom: 18px; }
+.new-entries-section:last-child { margin-bottom: 0; }
+.new-entries-heading { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+.new-entries-instructions { font-size: 0.82rem; color: #555; margin-bottom: 8px; }
+.new-entries-box { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.82rem; border: 1px solid #d0d4da; border-radius: 6px; padding: 8px; background: #f9fafb; resize: vertical; min-height: 70px; }
+.new-entries-actions { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
+.new-entries-copied { font-size: 0.78rem; color: #16a34a; display: none; }
+.new-entries-copied.show { display: inline; }
 .blurb-toolbar { display: flex; gap: 4px; margin-bottom: 4px; }
 .blurb-tag-btn { font-size: 0.78rem; padding: 2px 8px; border: 1px solid #d0d4da; border-radius: 4px; background: #f5f7fa; cursor: pointer; line-height: 1.4; }
 .blurb-tag-btn:hover { background: #e8edf5; border-color: #2563eb; }
@@ -319,6 +327,20 @@ input, textarea, select { font-family: inherit; }
     </div>
   </div>
   </div><!-- end .modal-overlay#dbModal -->
+
+  <!-- New Entries Notification Modal -->
+  <div class="modal-overlay" id="newEntriesModal">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚠ New Entries Need to Be Added to Google Sheets</h3>
+        <button class="modal-close" onclick="closeNewEntriesModal()">✕</button>
+      </div>
+      <div class="modal-body" id="newEntriesBody" style="padding:20px;overflow-y:auto;max-height:60vh;"></div>
+      <div class="modal-footer" style="padding:12px 20px;border-top:1px solid #e0e4ea;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary btn-sm" onclick="closeNewEntriesModal()">Done</button>
+      </div>
+    </div>
+  </div>
 
   <datalist id="contrib-db-list"></datalist>
 
@@ -1287,7 +1309,7 @@ function parseChoralContract(ws, wb, filename) {
     if (oMatch) occasionSet.add(oMatch);
   }
 
-  var title   = fields.title || '';
+  var title   = sanitizeBlurb(fields.title || '');
   var sortKey = computeSortKey(title);
 
   // Primary item = first octavo for catalog display / sort key
@@ -1304,7 +1326,7 @@ function parseChoralContract(ws, wb, filename) {
     set_item:    primaryItem,   // used by sortContracts
     score_item:  '',
     title:       title,
-    subtitle:    String(fields.subtitle || '').trim(),
+    subtitle:    sanitizeBlurb(String(fields.subtitle || '').trim()),
     supertitle:  '',
     series:      (function(){ var c3r = ws['C3'] ? String(ws['C3'].v||'') : ''; return lookupSeriesFromSheet(c3r) || fields.series || ''; })(),
     series_raw:  fields.series || '',
@@ -1360,9 +1382,9 @@ function parseNewChoralContract(ws, wb, filename) {
     return cell ? cell.v : null;
   }
 
-  var title    = getStr('C9');
+  var title    = sanitizeBlurb(getStr('C9'));
   // Subtitle: check (Subtitle:) at B10→C10, then Subtitle or Show Credit: at B11→C11
-  var subtitle = getStr('C10') || getStr('C11');
+  var subtitle = sanitizeBlurb(getStr('C10') || getStr('C11'));
   var authorLineRaw = getVal('C12');
 
   // --- Voicings (header at R18, confirm or scan) ---
@@ -1632,9 +1654,9 @@ function parseExcel(buffer, filename) {
     // Full prefixed catalog number for display/sorting (not written to Xitemnum)
     const catalog_num = pub_num + '-' + set_item;
 
-    const supertitle = cleanSingleLine(getCellVal(ws, 'C3'));
-    const title = cleanSingleLine(getCellVal(ws, 'C5'));
-    const subtitle = cleanSingleLine(getCellVal(ws, 'C7'));
+    const supertitle = sanitizeBlurb(cleanSingleLine(getCellVal(ws, 'C3')));
+    const title = sanitizeBlurb(cleanSingleLine(getCellVal(ws, 'C5')));
+    const subtitle = sanitizeBlurb(cleanSingleLine(getCellVal(ws, 'C7')));
     const author1 = cleanSingleLine(getCellVal(ws, 'C9'));
     const author2 = cleanSingleLine(getCellVal(ws, 'C10'));
     const author3 = cleanSingleLine(getCellVal(ws, 'C11'));
@@ -1974,7 +1996,7 @@ function populateInfoTab(c, cardId) {
   let html = `
     <div class="field-group">
       <label class="field-label">Title</label>
-      <input class="field-input" value="${escHtml(c.title)}" oninput="updateField('${cardId}','title',this.value)" />
+      <input class="field-input" value="${escHtml(c.title)}" oninput="updateTextField('${cardId}','title',this.value,this)" />
     </div>
     <div class="field-group">
       <label class="field-label">Sort Key <span class="field-label-note">auto-computed</span></label>
@@ -1983,11 +2005,11 @@ function populateInfoTab(c, cardId) {
     <div class="field-row">
       <div class="field-group">
         <label class="field-label">Subtitle</label>
-        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateField('${cardId}','subtitle',this.value)" />
+        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" />
       </div>
       <div class="field-group">
         <label class="field-label">Supertitle</label>
-        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateField('${cardId}','supertitle',this.value)" />
+        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" />
       </div>
     </div>
     <div class="field-group">
@@ -2172,6 +2194,18 @@ function revertCreditLine(cardId) {
   c.creditLine = original;
   const el = document.getElementById(`${cardId}-credit-text`);
   if (el) el.value = original;
+}
+
+function updateTextField(cardId, field, val, el) {
+  const sanitized = sanitizeBlurb(val);
+  if (el && sanitized !== val) {
+    const cursor = el.selectionStart;
+    const delta  = sanitized.length - val.length;
+    el.value = sanitized;
+    el.selectionStart = el.selectionEnd = Math.max(0, cursor + delta);
+    val = sanitized;
+  }
+  updateField(cardId, field, val);
 }
 
 function updateField(cardId, field, val) {
@@ -3400,17 +3434,91 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   return row;
 }
 
+const SHEET_CONTRIB_URL = 'https://docs.google.com/spreadsheets/d/1eu1xCW39jBJnqJiDmcSo8Sz_hrwHvO5M6emk9nRe6aw/edit?gid=0#gid=0';
+const SHEET_SERIES_URL  = 'https://docs.google.com/spreadsheets/d/1eu1xCW39jBJnqJiDmcSo8Sz_hrwHvO5M6emk9nRe6aw/edit?gid=319656041#gid=319656041';
+
+function closeNewEntriesModal() {
+  document.getElementById('newEntriesModal').classList.remove('open');
+}
+
+function copyNewEntries(textareaId, feedbackId) {
+  const el = document.getElementById(textareaId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.value).then(function() {
+    const fb = document.getElementById(feedbackId);
+    if (fb) { fb.classList.add('show'); setTimeout(function(){ fb.classList.remove('show'); }, 2000); }
+  });
+}
+
+function showNewEntriesModal(newContribs, newSeries) {
+  const contribEditUrl = SHEET_CONTRIB_URL;
+  const seriesEditUrl  = SHEET_SERIES_URL;
+  let html = '';
+
+  if (newContribs.length > 0) {
+    const rows = newContribs.map(function(name) {
+      const lastName = name.trim().split(/\s+/).pop();
+      return name + '\t' + name + '\t' + lastName;
+    });
+    const text = 'ContractName\tCanonicalName\tLastName\n' + rows.join('\n');
+    html += `
+      <div class="new-entries-section">
+        <div class="new-entries-heading">New Contributor${newContribs.length > 1 ? 's' : ''} (${newContribs.length})</div>
+        <div class="new-entries-instructions">Paste into the bottom of your <strong>Contributors</strong> sheet. ContractName and CanonicalName are pre-filled — correct CanonicalName if there's a typo, and verify LastName.</div>
+        <textarea id="newEntriesContribText" class="new-entries-box" readonly>${escHtml(text)}</textarea>
+        <div class="new-entries-actions">
+          <button class="btn btn-sm" onclick="copyNewEntries('newEntriesContribText','newEntriesContribCopied')">Copy to clipboard</button>
+          <span id="newEntriesContribCopied" class="new-entries-copied">✓ Copied!</span>
+          ${contribEditUrl ? `<a href="${contribEditUrl}" target="_blank" class="btn btn-sm">Open Contributors Sheet ↗</a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  if (newSeries.length > 0) {
+    const text = newSeries.join('\n');
+    html += `
+      <div class="new-entries-section">
+        <div class="new-entries-heading">New Series (${newSeries.length})</div>
+        <div class="new-entries-instructions">Add these to the bottom of your <strong>Series</strong> sheet. Fill in an Identifier (the distinctive text from cell C3 of the contract) so the app can recognise it in future.</div>
+        <textarea id="newEntriesSeriesText" class="new-entries-box" readonly>${escHtml(text)}</textarea>
+        <div class="new-entries-actions">
+          <button class="btn btn-sm" onclick="copyNewEntries('newEntriesSeriesText','newEntriesSeriesCopied')">Copy to clipboard</button>
+          <span id="newEntriesSeriesCopied" class="new-entries-copied">✓ Copied!</span>
+          ${seriesEditUrl ? `<a href="${seriesEditUrl}" target="_blank" class="btn btn-sm">Open Series Sheet ↗</a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('newEntriesBody').innerHTML = html;
+  document.getElementById('newEntriesModal').classList.add('open');
+}
+
 function exportCSV() {
   if (contracts.length === 0) return;
 
-  // Add new (orange) contributors to db
+  // Collect and register new (orange) contributors and series
+  const newContribs = [];
+  const newSeries   = [];
+  const seenContribs = new Set();
+  const seenSeries   = new Set();
+
   contracts.forEach(c => {
     const dbContribs = getContributors();
     c.contributors.forEach(contrib => {
       if (contrib.name && validateName(contrib.name, dbContribs).status === 'orange') {
-        addContributorToDb(contrib.name);
+        if (!seenContribs.has(contrib.name.toLowerCase())) {
+          seenContribs.add(contrib.name.toLowerCase());
+          newContribs.push(contrib.name);
+        }
       }
     });
+    const dbSeries = getSeries();
+    if (c.series && validateSeries(c.series, dbSeries).status === 'orange') {
+      if (!seenSeries.has(c.series.toLowerCase())) {
+        seenSeries.add(c.series.toLowerCase());
+        newSeries.push(c.series);
+      }
+    }
   });
   const lines = [CSV_HEADERS.map(csvEscape).join(',')];
   contracts.forEach(c => {
@@ -3448,6 +3556,11 @@ function exportCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
+  // Notify about new entries that need to go into Google Sheets
+  if (newContribs.length > 0 || newSeries.length > 0) {
+    showNewEntriesModal(newContribs, newSeries);
+  }
 }
 
 // ── Contributor CSV export ────────────────────────────────────────────────────
