@@ -2672,8 +2672,8 @@ function syncFromSheet(silent) {
           rows.forEach(function(row){
             var id   = (row['identifier'] || '').trim();
             var name = (row['seriesname'] || row['series name'] || row['series'] || '').trim();
-            if (!id || !name) return;
-            _seriesLookupArr.push({ identifier: id, seriesname: name });
+            if (!name) return;  // identifier is optional — only needed for auto-detection from contract C3
+            if (id) _seriesLookupArr.push({ identifier: id, seriesname: name });
             if (!seriesNames.includes(name)) seriesNames.push(name);
           });
           seriesNames.sort();
