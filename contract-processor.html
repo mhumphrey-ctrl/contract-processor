@@ -2637,7 +2637,7 @@ function syncFromSheet(silent) {
 
   if (cfg.contribUrl) {
     promises.push(
-      fetch(cfg.contribUrl)
+      fetch(cfg.contribUrl, { cache: 'no-store' })
         .then(function(r){ return r.text(); })
         .then(function(text){
           var rows = parseSheetCSV(text);
@@ -2663,7 +2663,7 @@ function syncFromSheet(silent) {
 
   if (cfg.seriesUrl) {
     promises.push(
-      fetch(cfg.seriesUrl)
+      fetch(cfg.seriesUrl, { cache: 'no-store' })
         .then(function(r){ return r.text(); })
         .then(function(text){
           var rows = parseSheetCSV(text);
