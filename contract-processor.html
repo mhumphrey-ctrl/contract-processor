@@ -53,6 +53,29 @@ input, textarea, select { font-family: inherit; }
 .drop-zone-sub { font-size: 0.8rem; color: #999; }
 .add-more-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .add-more-bar .btn { padding: 6px 14px; font-size: 0.82rem; }
+.new-record-dropdown { position: relative; display: inline-block; }
+.new-record-menu {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 220px;
+  background: #fff; border: 1px solid #d0d4da; border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; overflow: hidden;
+}
+.new-record-menu.open { display: block; }
+.new-record-menu-item {
+  display: block; width: 100%; text-align: left; padding: 9px 14px; font-size: 0.85rem;
+  color: #333; background: #fff; border: none; border-bottom: 1px solid #f0f2f5; cursor: pointer;
+}
+.new-record-menu-item:last-child { border-bottom: none; }
+.new-record-menu-item:hover:not(:disabled) { background: #f0f7ff; }
+.new-record-menu-item:disabled { color: #aaa; cursor: not-allowed; }
+.new-record-menu-item .menu-item-note { font-size: 0.75rem; color: #999; margin-left: 4px; }
+.piano-type-selector { display: flex; gap: 8px; }
+.piano-type-btn {
+  flex: 1; padding: 10px 12px; border: 2px solid #d0d4da; border-radius: 8px;
+  background: #fff; color: #374151; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.piano-type-btn:hover { border-color: #93c5fd; }
+.piano-type-btn.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
 
 /* ===== CARDS ===== */
 .cards-list { display: flex; flex-direction: column; gap: 12px; }
@@ -266,7 +289,14 @@ input, textarea, select { font-family: inherit; }
   <!-- Add more bar -->
   <div class="add-more-bar" id="addMoreBar">
     <button class="btn btn-sm" onclick="triggerFileInput()">+ Add More Files</button>
-    <button class="btn btn-sm" onclick="addScratchCard()">+ New Record</button>
+    <div class="new-record-dropdown" id="newRecordDropdown">
+      <button class="btn btn-sm" onclick="toggleNewRecordMenu(event)">+ New Record ▾</button>
+      <div class="new-record-menu" id="newRecordMenu">
+        <button class="new-record-menu-item" onclick="addScratchCard(); closeNewRecordMenu();">Band/Orch/Choral</button>
+        <button class="new-record-menu-item" onclick="addPianoScratchCard(); closeNewRecordMenu();">Piano</button>
+        <button class="new-record-menu-item" disabled title="Coming soon">Classroom/Choral Book <span class="menu-item-note">(coming soon)</span></button>
+      </div>
+    </div>
   </div>
 
 
@@ -361,7 +391,7 @@ var _syncSeriesCount  = 0;
 // =============================================
 // CONSTANTS & DATA
 // =============================================
-const APP_VERSION = 'v1.6';
+const APP_VERSION = 'v1.22';
 
 const BASE_SERIES = ["101 Series", "26 Italian Songs and Arias", "Accent on Achievement", "Active Listening Lessons", "Adventures in Music Listening", "Alfred Archive Edition", "Alfred Choral", "Alfred Choral Designs", "Alfred Church Choral Series", "Alfred Classroom Resources", "Alfred Concert Band Series", "Alfred Debut Series", "Alfred Pop Choral Series", "All About... Crossword Series", "Band Expressions Book One", "Band Expressions Book Two", "Basix® Series", "Belwin Beginning Band", "Belwin Beginning Full Orchestra", "Belwin Beginning String Orchestra", "Belwin Classic Band", "Belwin Concert Band", "Belwin Concert Full Orchestra", "Belwin Concert String Orchestra", "Belwin Contemporary Church Series", "Belwin Edition", "Belwin Festival Series", "Belwin First Year", "Belwin Intermediate Full Orchestra", "Belwin Intermediate String Orchestra", "Belwin Jazz Band Series", "Belwin Jazz Beginnings", "Belwin Jazz Expressions Series", "Belwin Jazz for Young People", "Belwin Jazz Legends Series", "Belwin Jazz Small Ensemble", "Belwin Jazz Vocal Series", "Belwin Pop Beginning Band", "Belwin Pop Beginning Full Orchestra", "Belwin Pop Beginning String Orchestra", "Belwin Pop Concert Band", "Belwin Pop Concert String Orchestra", "Belwin Pop Intermediate Full Orchestra", "Belwin Pop Intermediate String Orchestra", "Belwin Pop Symphonic Band", "Belwin Pop Symphonic Full Orchestra", "Belwin Pop Symphonic String Orchestra", "Belwin Pop Young Band", "Belwin Premier Jazz", "Belwin Symphonic Band", "Belwin Symphonic Full Orchestra", "Belwin Symphonic String Orchestra", "Belwin Very Beginning Band", "Belwin Very Beginning String Orchestra", "Belwin Young Band", "Belwin Young Jazz", "Big & Easy", "Bowmar Orchestral Library", "Brubecks Big Band", "Challenger Series", "Choral Movement Series", "Classic Choral Series", "Contemporary Sacred Choral Series", "Developing Band", "Developing SATB Repertoire", "Diamond Series", "Digital Sheet Music - Easy Piano", "Digital Sheet Music - Guitar Solo", "Digital Sheet Music Piano", "Digital Sheet Music PVC", "Digital Sheet Music PVG", "Donald Hunsberger Wind Library", "Duets for All", "Easy Choral Masterworks Series", "Easy Pops", "Eighth Note Publications", "Ensembles for All", "For Solo Singers", "For Two Series", "Foundations Band", "Foundations Strings", "Franco Colombo Choral Series", "Gary Fry Choral Series", "Gateway Series", "Gordon Goodwin Little Phat Band Series", "Gordon Goodwin Series", "H. W. Gray", "Highland Full Orchestra", "Highland String Orchestra", "Highland/Etling First Philharmonic", "Highland/Etling String Alternatives", "Hot Pop Band", "Hot Pop Strings", "I Sing, You Sing", "J. Fischer & Bro. Choral Series", "Jazz at Lincoln Center", "Jazz Improvisation Series", "Kalmus Edition", "Lawson-Gould", "Lawson-Gould: Robert DeCormier Choral Series", "Lawson-Gould: The Dave Brubeck Series", "Learning with Classroom Musicals Series", "MakeMusic Concert Band", "MakeMusic Developing Band", "MakeMusic Developing Strings", "MakeMusic First Performance Band", "MakeMusic First Performance Strings", "MakeMusic Full Orchestra", "MakeMusic Intermediate Strings", "MakeMusic String Orchestra", "MakeMusic Symphonic Band", "MakeMusic Symphony Orchestra", "MakeMusic Symphony Strings", "MakeMusic Young Band", "Mark Wood Series", "Meet the Instruments", "Mega Sounds", "Music for Little Mozarts", "New Directions Choral Series", "Nine Noteworthy", "Orchestra Expressions Book One", "Orchestra Expressions Book Two", "Original Sheet Music", "Partner Songbooks", "Pathways of Song Series", "Portraits of Great Composers", "Premier Series for Marching Band", "Premiere Performance", "Professional Orchestra Series", "Rare Recital Treasures", "Ready to Sing", "Rockkidz Play-alongs", "RWS - All Together", "RWS - Beginning Band", "RWS - Beginning Strings", "RWS - Concert Band", "RWS - Concert Orchestra", "RWS - Concert Strings", "RWS - Custom Concert Band", "RWS - Developing Band", "RWS - Developing Orchestra", "RWS - Developing Strings", "RWS - Festival Ensemble", "RWS - Festival Solo", "RWS - Infinity Percussion", "RWS - Symphonic Strings", "RWS - Symphony Band", "RWS - Symphony Orchestra", "RWS - Very Beginning Band", "RWS - Very Beginning Strings", "Sacred Choral Series", "Sacred Performer Collections", "Signature Series", "Sing at First Sight", "Singer's Library Series", "Solo Celebration", "Sound Innovations Series for Band", "Sound Innovations Series for Strings", "Sound Innovations Soloist for Intermediate Musicians", "Sound Innovations Sound Performance for Band", "Spotlight on Kids Series", "Standard Library Series", "Strictly Strings", "String Explorer", "Studio PR", "Summy-Birchard Music", "Suzuki Flute School", "Suzuki Guitar School", "Teach Yourself Series", "The Elmer Iseler Choral Series", "The Suzuki Method", "The Ultimate Beginner Series", "This Is Music!", "Thompson Choral Library", "Toronto Children's Chorus Choral Series", "Two-Gether We Sing", "Ultimate Play-Along", "Ultimate Vocal Sing-Along", "Very Easy Pops", "Vocal Complete", "Vocalize!", "Warner Bros. Chartbuster Series", "Warner Bros. Choral Library", "WB Dance Series", "Wilfin String Orchestra: Young String Ensemble Series", "World Music Series", "Young Symphonic Series"];
 
@@ -1893,9 +1923,16 @@ function renderAllCards() {
   contracts.forEach(c => {
     if (!c.error) {
       initItemsFromLegacy(c);
+      if (c.recordType === 'piano') checkPianoWarnings(c);
       const wrapper = createCard(c);
       list.appendChild(wrapper); // must be in DOM before populate functions run
-      populateInfoTab(c, c._id);
+      if (c.recordType === 'piano') {
+        populatePianoInfoTab(c, c._id);
+      } else {
+        populateInfoTab(c, c._id);
+      }
+      // Contributors / Blurbs / Tags tabs are shared across all record types —
+      // their rendering never branches on isChoral or recordType.
       populateContributorsTab(c, c._id);
       populateBlurbsTab(c, c._id);
       populateTagsTab(c, c._id);
@@ -1938,7 +1975,10 @@ function createCard(c) {
   if (warningCount > 0) statusBadge = `<span class="badge badge-orange">${warningCount} warning${warningCount>1?'s':''}</span>`;
 
   let catalogDisplay, typeBadge;
-  if (c.isChoral) {
+  if (c.recordType === 'piano') {
+    catalogDisplay = `<span id="${id}-catalog-display">${escHtml(c.catalog_num || '—')}</span>`;
+    typeBadge = `<span class="badge badge-blue">Piano</span> <span class="badge badge-gray" id="${id}-format-badge">${escHtml(c.pianoType || '')}</span>`;
+  } else if (c.isChoral) {
     catalogDisplay = `<span id="${id}-catalog-display">${escHtml(c.catalog_num || '—')}</span>`;
     const iCount = (c.items || c.voicings || []).length;
     typeBadge = `<span class="badge badge-purple">Choral</span> <span class="badge badge-gray" id="${id}-item-badge">${iCount} item${iCount !== 1 ? 's' : ''}</span>`;
@@ -2344,6 +2384,22 @@ function addItem(cardId) {
 // =============================================
 // NEW RECORD PICKER
 // =============================================
+function toggleNewRecordMenu(evt) {
+  if (evt) evt.stopPropagation();
+  const menu = document.getElementById('newRecordMenu');
+  if (menu) menu.classList.toggle('open');
+}
+
+function closeNewRecordMenu() {
+  const menu = document.getElementById('newRecordMenu');
+  if (menu) menu.classList.remove('open');
+}
+
+document.addEventListener('click', function(evt) {
+  const dropdown = document.getElementById('newRecordDropdown');
+  if (dropdown && !dropdown.contains(evt.target)) closeNewRecordMenu();
+});
+
 // =============================================
 // SCRATCH CARD
 // =============================================
@@ -2387,6 +2443,206 @@ function addScratchCard() {
 }
 
 // =============================================
+// PIANO SCRATCH CARD
+// =============================================
+// Separate record type from the Band/Orch/Choral "scratch" card above, by design —
+// Piano metadata rules are still being worked out (see open questions with Matt), and
+// keeping this on its own data shape/functions means nothing here can regress the
+// existing Band/Orch/Choral parsing or export logic.
+function addPianoScratchCard() {
+  const scratchId = 'card-piano-' + Date.now();
+  const blankContract = {
+    _id: scratchId,
+    filename: 'New Piano Record',
+    recordType: 'piano',
+    isChoral: false,
+    catalog_num: '00-',
+    pub_num: '00',
+    set_item: '',
+    items: [{ format: '', itemnum: '' }],   // piano products get exactly one Format/Item# pair today
+    pianoType: '',          // 'Book' / 'Sheet' / 'Digital Sheet' — chosen up top, drives Format/WebFormat
+    title: '', subtitle: '', supertitle: '',
+    series: '', series_raw: '', seriesBlurb: '',
+    contributors: [],
+    creditLine: '', _originalCreditLine: '',
+    primaryLastName: '',
+    sortKey: '',
+    short_blurb: '', long_blurb: '',
+    short_blurb_final: '', long_blurb_final: '',
+    level: '', gradeNum: '', duration: '',
+    // No fmCategory / webProductSubType fields — resolved with Matt 2026-08-03:
+    // FMcategory, WebProductType, WebProductSubType, GradeNum, RetailUpCode, NAMM,
+    // and BISAC are all filled in manually in FileMaker after import for Piano, so
+    // the app always exports them blank (see buildPianoRow).
+    eFields: {},
+    tagData: { genre: [], musicalForm: [], specialFeatures: [], webSource: [], warnings: [] },
+    tags: {
+      genre: new Set(), musicalForm: new Set(), specialFeatures: new Set(),
+      webSource: new Set(), holiday: new Set(), occasion: new Set(),
+      season: new Set(), era: new Set(),
+    },
+    allWarnings: [],
+  };
+  contracts.push(blankContract);
+  sortContracts();
+  renderAllCards();
+  updateCounter();
+  const newCardEl = document.getElementById(blankContract._id);
+  if (newCardEl) newCardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updatePianoItem(cardId, field, val) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  if (!c.items || !c.items.length) c.items = [{ format: '', itemnum: '' }];
+  c.items[0][field] = val;
+  c.set_item = c.items[0].itemnum || '';
+  c.catalog_num = '00-' + (c.set_item || '');
+  const displayEl = document.getElementById(`${cardId}-catalog-display`);
+  if (displayEl) displayEl.textContent = c.catalog_num || '—';
+}
+
+// Three Piano product types (resolved with Matt 2026-07-30, from the Digital Sheets
+// metadata review): Book, Sheet, and Digital Sheet. Digital Sheet is NOT a distinct
+// value in the underlying "Format" field — the source data shows Format is always
+// 'Sheet' even for digital-only titles. The real distinction lives in WebFormat
+// ('Sheet' vs 'Digital_Download'), which is why this is a dedicated selector rather
+// than just adding a third option to the old Format dropdown. Digital Sheet always
+// exports WebFormat as BOTH 'Sheet' and 'Digital_Download' (see buildPianoRow) — the
+// UI doesn't need to show this mapping since it's fixed and not user-editable.
+// NOTE: this does not yet cover the "Sheet that's ALSO available as a digital
+// download" combo case (WebFormat: 'Sheet\nDigital_Download') seen a lot in that same
+// file — that's a separate follow-up, not implemented here.
+
+function updatePianoType(cardId, type) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  c.pianoType = type;
+  if (!c.items || !c.items.length) c.items = [{ format: '', itemnum: '' }];
+  // Format (the underlying field) is 'Book' only for Books — both Sheet and Digital
+  // Sheet store 'Sheet' here, matching the source data convention.
+  c.items[0].format = (type === 'Book') ? 'Book' : 'Sheet';
+  populatePianoInfoTab(c, cardId);
+  const badgeEl = document.getElementById(`${cardId}-format-badge`);
+  if (badgeEl) badgeEl.textContent = type || '';
+}
+
+// Soft nudge (resolved with Matt 2026-07-30): warn when a title looks like part of a
+// numbered series ("Book 2", "Book 3", ...) but Series is still empty — this is exactly
+// the gap that happened with Saga Land / Saga Land, Book 2 in the source data.
+function checkPianoWarnings(c) {
+  const warnings = [];
+  const m = (c.title || '').match(/\bBook\s*(\d+)\b/i);
+  if (m && !(c.series || '').trim()) {
+    warnings.push(`Title looks like part of a numbered series ("Book ${m[1]}") but Series is empty — did you forget to fill it in?`);
+  }
+  c.allWarnings = warnings;
+}
+
+// Recomputes warnings and refreshes the Tags tab badge + panel in place (no full
+// card re-render needed).
+function refreshPianoWarningsUI(cardId) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  checkPianoWarnings(c);
+  const card = document.getElementById(cardId);
+  if (card) {
+    const tagsBtn = [...card.querySelectorAll('.tab-btn')].find(b => (b.getAttribute('onclick') || '').includes("'tags'"));
+    if (tagsBtn) tagsBtn.innerHTML = 'Tags' + (c.allWarnings.length > 0 ? ' ⚠' : '') + '  ';
+  }
+  const panel = document.getElementById(`${cardId}-tags`);
+  if (panel) populateTagsTab(c, cardId);
+}
+
+function updatePianoTitle(cardId, val, el) {
+  updateTextField(cardId, 'title', val, el);
+  refreshPianoWarningsUI(cardId);
+}
+
+function updatePianoSeries(cardId, val) {
+  onSeriesChange(cardId, val);
+  refreshPianoWarningsUI(cardId);
+}
+
+// =============================================
+// PIANO INFO TAB
+// =============================================
+// Deliberately NOT reusing populateInfoTab() — Piano has no ensemble, no
+// Flexible Instrumentation, no numeric grade system, and (per the metadata review)
+// its Format/level/category rules are still open questions. Keeping this as its
+// own function means we can iterate on Piano fields without any risk to the
+// Band/Orch/Choral Info tab.
+function populatePianoInfoTab(c, cardId) {
+  const panel = document.getElementById(`${cardId}-info`);
+  const seriesValid = validateSeries(c.series, getSeries());
+  const seriesBadge = validBadge(seriesValid.status);
+  const item = (c.items && c.items[0]) || { format: '', itemnum: '' };
+
+  const PIANO_TYPES = ['Book', 'Sheet', 'Digital Sheet'];
+
+  let html = `
+    <div class="field-group">
+      <label class="field-label">Piano Product Type</label>
+      <div class="piano-type-selector">
+        ${PIANO_TYPES.map(t => `<button type="button" class="piano-type-btn ${c.pianoType===t?'active':''}" onclick="updatePianoType('${cardId}','${t}')">${t}</button>`).join('')}
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Title</label>
+      <input class="field-input" value="${escHtml(c.title)}" oninput="updatePianoTitle('${cardId}',this.value,this)" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Sort Key <span class="field-label-note">auto-computed — no bracketed suffix for Piano (unlike Choral)</span></label>
+      <input class="field-input" id="${cardId}-sortkey" style="font-size:0.82rem;color:#666;" value="${escHtml(c.sortKey)}" oninput="updateField('${cardId}','sortKey',this.value)" />
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Subtitle</label>
+        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Supertitle</label>
+        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" />
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Series</label>
+      <div class="field-with-badge">
+        <input class="field-input" id="${cardId}-series-input" value="${escHtml(c.series)}" oninput="updatePianoSeries('${cardId}',this.value)" />
+        <span id="${cardId}-series-badge">${seriesBadge}</span>
+      </div>
+      <div id="${cardId}-series-suggestions" class="suggestions"></div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Series Blurb <span class="field-label-note">Piano writes real copy here (unlike Band/Orch/Choral, where this field is left blank for FM)</span></label>
+      <textarea class="field-input" rows="2" style="width:100%;resize:vertical;"
+        oninput="updateTextField('${cardId}','seriesBlurb',this.value,this)">${escHtml(c.seriesBlurb||'')}</textarea>
+    </div>
+    <div class="field-row" style="margin-top:8px;">
+      <div class="field-group" style="flex:0 0 140px">
+        <label class="field-label">Item #</label>
+        <input class="field-input" value="${escHtml(item.itemnum)}" oninput="updatePianoItem('${cardId}','itemnum',this.value)" />
+      </div>
+    </div>
+    <div class="field-row" style="margin-top:8px;">
+      <div class="field-group" style="flex:0 0 200px">
+        <label class="field-label">Level <span class="field-label-note">exports as-is into the Level column — grade breakdown handled manually in FileMaker after import</span></label>
+        <input class="field-input" value="${escHtml(c.level||'')}" oninput="updateField('${cardId}','level',this.value)" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Duration <span class="field-label-note">optional</span></label>
+        <input class="field-input" placeholder="e.g. 3:45" value="${escHtml(c.duration||'')}" oninput="updateField('${cardId}','duration',this.value)" />
+      </div>
+    </div>
+    <div class="field-group" style="font-size: 0.78rem; color: #999;">
+      FMcategory, WebProductType, WebProductSubType, GradeNum, RetailUpCode, NAMM, and BISAC are all filled in manually in FileMaker after import — nothing to set here.
+    </div>`;
+
+  panel.innerHTML = html;
+  showSeriesSuggestions(cardId, seriesValid, c);
+}
+
+// =============================================
 // CONTRIBUTORS TAB
 // =============================================
 function populateContributorsTab(c, cardId) {
@@ -2414,6 +2670,14 @@ function renderContributorsTab(c, cardId, panel) {
         style="width:100%;margin-top:4px;font-size:0.88rem;resize:vertical;"
         oninput="updateField('${cardId}','creditLine',this.value)">${escHtml(c.creditLine)}</textarea>
     </div>`;
+
+  // Piano-only: live preview of the auto-computed "Ed catalog style" export value.
+  if (c.recordType === 'piano') {
+    html += `<div class="credit-preview" style="margin-top:10px;">
+      <div class="credit-preview-label">Ed catalog style <span class="field-label-note">auto-computed — last contributor's last name, or the composer's if the rest are Editors</span></div>
+      <div class="field-input readonly" id="${cardId}-edcatstyle-preview" style="margin-top:4px;">${escHtml(pianoEdCatalogStyle(c))}</div>
+    </div>`;
+  }
 
   panel.innerHTML = html;
 }
@@ -2470,6 +2734,10 @@ function updateContrib(cardId, idx, field, val) {
   c.contributors[idx][field] = val;
   // Keep Ed catalog style in sync whenever name or role changes
   if (field === 'name' || field === 'role') recalcPrimaryLastName(c);
+  if ((field === 'name' || field === 'role') && c.recordType === 'piano') {
+    const previewEl = document.getElementById(`${cardId}-edcatstyle-preview`);
+    if (previewEl) previewEl.textContent = pianoEdCatalogStyle(c);
+  }
 }
 
 function onContribNameInput(cardId, idx, val) {
@@ -3175,6 +3443,10 @@ const MULTIVALUE_FIELDS = new Set([
   'WebGrade'
 ]);
 
+// Fields that are in EMPTY_FIELDS (blank for Band/Orch/Choral, left for FM to fill)
+// but that Piano actually populates for real. Keep in sync with buildPianoRow().
+const PIANO_NON_EMPTY_OVERRIDES = new Set(['SeriesBlurb', 'WebInstrumentGroup', 'WebInstrument']);
+
 const BTRADE_Y_FORMATS = new Set([
   'Book', 'Book & Online Media',
   "Teacher's Handbook & Online Audio/PDF",
@@ -3290,8 +3562,8 @@ function contractToRow(c, itemType) {
   row['PLS Assigned']   = c.isRWS ? 'Chelsey U.' : 'Chase B.';
 
   // TODO: When new product types are added (e.g. piano, guitar, etc.), revisit this field.
-  // Current rules: RWS/Wilfin → 'Dist - ready' | other band/orch → 'BOP - ready'
-  row['New Issue Codes Teams'] = (c.isRWS || c.isWilfin) ? 'Dist - ready' : 'BOP - ready';
+  // Current rules: RWS/Wilfin → 'Dist' | other band/orch → 'BOP'
+  row['New Issue Codes Teams'] = (c.isRWS || c.isWilfin) ? 'Dist' : 'BOP';
 
   row['Brand']        = getBrand(c.series);
   row['Format']       = isScore ? 'Conductor Score' : 'Conductor Score & Parts';
@@ -3494,7 +3766,7 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   row['PLS Assigned']   = 'Krista H.';
 
   // TODO: When new product types are added, revisit New Issue Codes Teams.
-  row['New Issue Codes Teams'] = 'Choral - ready';
+  row['New Issue Codes Teams'] = 'Choral';
 
   row['Brand'] = getBrand(c.series);
 
@@ -3519,6 +3791,156 @@ function choralVoicingToRow(c, voicing, position, totalRows) {
   }
 
   row['BTradeOutput'] = BTRADE_Y_FORMATS.has(voicing.name) ? 'y' : 'n';
+
+  return row;
+}
+
+// Ed catalog style rule (resolved with Matt 2026-07-30):
+//   - Default: last name of the LAST contributor in the list.
+//   - Exception: if there is exactly one Composer and every other contributor is
+//     an Editor (e.g. the Florence Price sheet — composer + 2 editors), use the
+//     composer's last name instead.
+function pianoEdCatalogStyle(c) {
+  const contribs = (c.contributors || []).filter(x => x.name);
+  if (contribs.length === 0) return '';
+  const composers = contribs.filter(x => x.role === 'Composer');
+  const nonComposers = contribs.filter(x => x.role !== 'Composer');
+  if (composers.length === 1 && nonComposers.length > 0 && nonComposers.every(x => x.role === 'Editor')) {
+    return parseName(composers[0].name).lastName || composers[0].name;
+  }
+  const last = contribs[contribs.length - 1];
+  return parseName(last.name).lastName || last.name;
+}
+
+// =============================================
+// PIANO ROW BUILDER
+// =============================================
+// Deliberately separate from contractToRow()/choralVoicingToRow() above — Piano is a
+// different product shape (one Format/Item# pair, frequently many contributors per
+// title, no ensemble/grade system) and several field rules are still open questions
+// with Matt (see TODOs below). Filling these in should never require touching the
+// Band/Orch/Choral builders.
+function buildPianoRow(c) {
+  const row = {};
+  CSV_HEADERS.forEach(h => { row[h] = ''; });
+  const item = (c.items && c.items[0]) || { format: '', itemnum: '' };
+  const itemNum = item.itemnum || '';
+
+  row['Web clean title'] = c.title || '';
+  // Resolved with Matt 2026-07-30: Piano never gets the bracketed sort suffix
+  // ([LastName#of#]) that Choral uses — the source data applied it inconsistently
+  // and the "#of#" count was broken wherever it appeared. TitleForSorting is just
+  // the plain computed sort key.
+  row['TitleForSorting'] = c.sortKey || '';
+  row['Supertitle'] = c.supertitle || '';
+  row['Subtitle'] = c.subtitle || '';
+  row['Xitemnum'] = itemNum;
+
+  // Resolved with Matt 2026-07-30 (Digital Sheets review): WebFormat needs to come from
+  // the Piano Product Type selector, not the plain Format string — Digital Sheet stores
+  // Format:'Sheet' just like Sheet does. Revised same day: every Digital Sheet gets BOTH
+  // 'Sheet' and 'Digital_Download' in WebFormat — the one source example with just
+  // 'Digital_Download' alone was user error, not a real third variant.
+  row['WebFormat'] = c.pianoType === 'Digital Sheet' ? 'Sheet\rDigital_Download' : (item.format || '');
+  // Resolved with Matt 2026-07-30: WebProductType's three tags (Piano_Supplemental /
+  // Series / Masterworks) don't reduce to a clean rule in the source data — even
+  // accounting for Genre/FMcategory/Series, there were direct contradictions (e.g.
+  // Monsters, Myths & Mysteries carries the Series tag with no Series name at all,
+  // while Saga Land Book 1 and Book 2 — the same practical series — are tagged
+  // differently from each other). Deliberately leaving this blank for Piano rather
+  // than guessing; revisit later if needed.
+  row['WebProductType'] = '';
+  // Resolved with Matt 2026-08-03: WebProductSubType is filled in manually in
+  // FileMaker after import for Piano — always blank here.
+  row['WebProductSubType'] = '';
+  // Resolved with Matt 2026-07-30: the Price sheet's 'keyboard [popular]' is the only
+  // outlier across all 19 known Piano Books products (same pattern as BTradeOutput's
+  // 'Pending' one-off) — Product line is just 'keyboard'. Confirmed 2026-08-03 this
+  // also holds for Digital Sheets — no '[popular]' suffix needed there either.
+  row['Product line'] = 'keyboard';
+
+  row['webdescription'] = sanitizeBlurb(c.long_blurb_final || '');
+  row['shortdescription'] = sanitizeBlurb(c.short_blurb_final || '');
+
+  row['WebInstrumentGroup'] = 'Piano_Keyboard';
+  // Resolved with Matt 2026-07-30: source data alternated between 'Piano' and
+  // 'Piano\nKeyboard' with no discernible rule (even flip-flopped within the same
+  // 3-book Rare Recital Treasures series) — just use plain 'Piano' going forward.
+  row['WebInstrument'] = 'Piano';
+  row['WebDefinition'] = item.format === 'Sheet' ? 'Piano Sheet' : (item.format === 'Book' ? 'Piano Book' : '');
+  row['instrument'] = 'Piano';
+  row['Instrumentation'] = ''; // not applicable to Piano
+  // Resolved with Matt 2026-08-03: FMcategory is filled in manually in FileMaker
+  // after import for Piano — always blank here.
+  row['FMcategory'] = '';
+  // Resolved with Matt 2026-08-03: for Digital Sheet specifically, InfoBeforePrice is
+  // 'Sheet Digital Download' (no "- Easy Piano" variant needed — that nuance isn't
+  // being chased). Sheet keeps the simpler 'Sheet' value used for the original Piano
+  // Solo sheets; Book stays blank.
+  row['InfoBeforePrice'] = c.pianoType === 'Digital Sheet' ? 'Sheet Digital Download'
+    : (item.format === 'Sheet' ? 'Sheet' : '');
+
+  row['Level'] = c.level || '';
+  // Resolved with Matt 2026-08-03: WebSubLevel and GradeNum are filled in manually in
+  // FileMaker after import for Piano — always blank here. Level (above) is the only
+  // thing the app itself exports for level/grade info.
+  row['WebSubLevel'] = '';
+  row['GradeNum'] = '';
+  row['WebGrade'] = '';
+
+  // Resolved with Matt 2026-08-03: NAMM codes and BISAC codes (like RetailUpCode) are
+  // filled in manually in FileMaker after import for Piano — always blank here.
+  row['RetailUpCode'] = '';
+
+  row['Duration'] = c.duration || '';
+  row['Series'] = c.series || '';
+  row['SeriesBlurb'] = sanitizeBlurb(c.seriesBlurb || '');
+
+  // Tags — same convention as Band/Orch/Choral (plain fields use '; ', Web* checkbox
+  // fields use '\r' as the multi-value separator).
+  // Resolved with Matt 2026-07-30 (revised): Band/Orch/Choral always keep Genre and
+  // WebGenre in sync — both are derived from the same tag selection, just with
+  // different separators/underscore formatting. The Piano source data that only set
+  // WebGenre (leaving Genre blank) looks like an inconsistency in that legacy data
+  // entry, not an intentional Piano-specific rule — so Piano now matches the
+  // Band/Orch/Choral convention and always populates both together.
+  row['Genre']              = [...c.tags.genre].map(function(v){ return v.replace(/_/g,' '); }).join('; ');
+  row['MusicalForm']        = [...c.tags.musicalForm].join('; ');
+  row['Special Features']   = [...c.tags.specialFeatures].join('; ');
+  row['Holiday']            = [...c.tags.holiday].join('; ');
+  row['WebSource']          = [...c.tags.webSource].join('\r');
+  row['Occasion']           = [...c.tags.occasion].join('; ');
+  row['Season']             = [...c.tags.season].join('; ');
+  row['Era']                = [...c.tags.era].join('; ');
+  row['WebGenre']           = [...c.tags.genre].join('\r');
+  row['WebMusicalForm']     = [...c.tags.musicalForm].join('\r');
+  row['WebSpecialFeatures'] = [...c.tags.specialFeatures].join('\r');
+  row['WebHoliday']         = [...c.tags.holiday].join('\r');
+  row['WebOccasion']        = [...c.tags.occasion].join('\r');
+  row['WebSeason']          = [...c.tags.season].join('\r');
+  row['WebEra']             = [...c.tags.era].join('\r');
+
+  row['Comp arr trans artist'] = c.creditLine || '';
+  row['ContributorHyperlink'] = c.contributors.filter(x => x.name).map(x => x.name).join('; ');
+  row['Ed catalog style'] = pianoEdCatalogStyle(c);
+
+  row['pubnum'] = '0'; // Piano always uses pubnum 0 (matches the Choral convention)
+  row['Scan File Name'] = itemNum ? ('00-' + itemNum) : '';
+  row['itemnum'] = itemNum ? ('(' + itemNum + ')') : '';
+  row['PLS Assigned'] = 'Mallory B.';
+  // Resolved with Matt 2026-08-03: Book -> 'Done', regular Sheet -> 'Piano'
+  // (Introduction and Toccata / the Price sheet are the only two examples of this
+  // type), Digital Sheet -> 'n/a'.
+  row['New Issue Codes Teams'] = c.pianoType === 'Digital Sheet' ? 'n/a'
+    : (c.pianoType === 'Sheet' ? 'Piano' : 'Done');
+
+  row['Brand'] = getBrand(c.series);
+  row['Format'] = item.format || '';
+  row['Voicing'] = ''; // N/A for Piano
+  // Resolved with Matt 2026-07-30: ignoring the one Price-sheet outlier ('Pending' —
+  // likely a one-off workflow status, not a real third state), the rule is clean:
+  // Book → 'y', Sheet → 'n'. Same BTRADE_Y_FORMATS whitelist as Band/Orch/Choral.
+  row['BTradeOutput'] = BTRADE_Y_FORMATS.has(item.format) ? 'y' : 'n';
 
   return row;
 }
@@ -3623,6 +4045,17 @@ function exportCSV() {
           return csvEscape(row[h] || '');
         }).join(','));
       });
+    } else if (c.recordType === 'piano') {
+      // One CSV row per Piano record (single Format/Item# pair today).
+      const row = buildPianoRow(c);
+      lines.push(CSV_HEADERS.map(function(h) {
+        // Piano actually populates these — unlike Band/Orch/Choral, where they're
+        // left blank for FM. (Caught 2026-07-30: WebInstrumentGroup/WebInstrument
+        // were being silently wiped by this filter even though buildPianoRow set them.)
+        if (PIANO_NON_EMPTY_OVERRIDES.has(h)) return csvEscape(row[h] || '');
+        if (EMPTY_FIELDS.has(h)) return '';
+        return csvEscape(row[h] || '');
+      }).join(','));
     } else {
       ['set', 'score'].forEach(function(itemType) {
         const row = contractToRow(c, itemType);
@@ -3765,6 +4198,28 @@ function exportContributorsCSV() {
           };
           lines.push(CONTRIBUTOR_HEADERS.map(function(h){ return csvEscape(row[h] || ''); }).join(','));
         });
+      });
+    } else if (c.recordType === 'piano') {
+      // One contributor row per contributor (single Item# for Piano, no score/set split).
+      var pianoItem = (c.items && c.items[0]) || { itemnum: '' };
+      var pubNumPiano = parseInt(c.pub_num) || 0;
+      (c.contributors || []).forEach(function(contrib, idx) {
+        if (!contrib.name) return;
+        var parsed = parseName(contrib.name);
+        var fmRole = FM_ROLE_MAP[contrib.role] || contrib.role || 'Pending';
+        var row = {
+          'Pubnum':              String(pubNumPiano),
+          'Itemnum':             pianoItem.itemnum || '',
+          'Role':                fmRole,
+          'FirstName':           parsed.firstName,
+          'MiddleNameOrInitial': parsed.middleName,
+          'LastName':            parsed.lastName,
+          'Suffix':              parsed.suffix,
+          'Prefix':              parsed.prefix,
+          'FullName':            contrib.name,
+          'PositionInHyperlink': String(idx + 1),
+        };
+        lines.push(CONTRIBUTOR_HEADERS.map(function(h){ return csvEscape(row[h] || ''); }).join(','));
       });
     } else {
       ['set', 'score'].forEach(function(itemType) {
