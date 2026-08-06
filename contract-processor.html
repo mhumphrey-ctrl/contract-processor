@@ -391,7 +391,7 @@ var _syncSeriesCount  = 0;
 // =============================================
 // CONSTANTS & DATA
 // =============================================
-const APP_VERSION = 'v1.22';
+const APP_VERSION = 'v1.23';
 
 const BASE_SERIES = ["101 Series", "26 Italian Songs and Arias", "Accent on Achievement", "Active Listening Lessons", "Adventures in Music Listening", "Alfred Archive Edition", "Alfred Choral", "Alfred Choral Designs", "Alfred Church Choral Series", "Alfred Classroom Resources", "Alfred Concert Band Series", "Alfred Debut Series", "Alfred Pop Choral Series", "All About... Crossword Series", "Band Expressions Book One", "Band Expressions Book Two", "Basix® Series", "Belwin Beginning Band", "Belwin Beginning Full Orchestra", "Belwin Beginning String Orchestra", "Belwin Classic Band", "Belwin Concert Band", "Belwin Concert Full Orchestra", "Belwin Concert String Orchestra", "Belwin Contemporary Church Series", "Belwin Edition", "Belwin Festival Series", "Belwin First Year", "Belwin Intermediate Full Orchestra", "Belwin Intermediate String Orchestra", "Belwin Jazz Band Series", "Belwin Jazz Beginnings", "Belwin Jazz Expressions Series", "Belwin Jazz for Young People", "Belwin Jazz Legends Series", "Belwin Jazz Small Ensemble", "Belwin Jazz Vocal Series", "Belwin Pop Beginning Band", "Belwin Pop Beginning Full Orchestra", "Belwin Pop Beginning String Orchestra", "Belwin Pop Concert Band", "Belwin Pop Concert String Orchestra", "Belwin Pop Intermediate Full Orchestra", "Belwin Pop Intermediate String Orchestra", "Belwin Pop Symphonic Band", "Belwin Pop Symphonic Full Orchestra", "Belwin Pop Symphonic String Orchestra", "Belwin Pop Young Band", "Belwin Premier Jazz", "Belwin Symphonic Band", "Belwin Symphonic Full Orchestra", "Belwin Symphonic String Orchestra", "Belwin Very Beginning Band", "Belwin Very Beginning String Orchestra", "Belwin Young Band", "Belwin Young Jazz", "Big & Easy", "Bowmar Orchestral Library", "Brubecks Big Band", "Challenger Series", "Choral Movement Series", "Classic Choral Series", "Contemporary Sacred Choral Series", "Developing Band", "Developing SATB Repertoire", "Diamond Series", "Digital Sheet Music - Easy Piano", "Digital Sheet Music - Guitar Solo", "Digital Sheet Music Piano", "Digital Sheet Music PVC", "Digital Sheet Music PVG", "Donald Hunsberger Wind Library", "Duets for All", "Easy Choral Masterworks Series", "Easy Pops", "Eighth Note Publications", "Ensembles for All", "For Solo Singers", "For Two Series", "Foundations Band", "Foundations Strings", "Franco Colombo Choral Series", "Gary Fry Choral Series", "Gateway Series", "Gordon Goodwin Little Phat Band Series", "Gordon Goodwin Series", "H. W. Gray", "Highland Full Orchestra", "Highland String Orchestra", "Highland/Etling First Philharmonic", "Highland/Etling String Alternatives", "Hot Pop Band", "Hot Pop Strings", "I Sing, You Sing", "J. Fischer & Bro. Choral Series", "Jazz at Lincoln Center", "Jazz Improvisation Series", "Kalmus Edition", "Lawson-Gould", "Lawson-Gould: Robert DeCormier Choral Series", "Lawson-Gould: The Dave Brubeck Series", "Learning with Classroom Musicals Series", "MakeMusic Concert Band", "MakeMusic Developing Band", "MakeMusic Developing Strings", "MakeMusic First Performance Band", "MakeMusic First Performance Strings", "MakeMusic Full Orchestra", "MakeMusic Intermediate Strings", "MakeMusic String Orchestra", "MakeMusic Symphonic Band", "MakeMusic Symphony Orchestra", "MakeMusic Symphony Strings", "MakeMusic Young Band", "Mark Wood Series", "Meet the Instruments", "Mega Sounds", "Music for Little Mozarts", "New Directions Choral Series", "Nine Noteworthy", "Orchestra Expressions Book One", "Orchestra Expressions Book Two", "Original Sheet Music", "Partner Songbooks", "Pathways of Song Series", "Portraits of Great Composers", "Premier Series for Marching Band", "Premiere Performance", "Professional Orchestra Series", "Rare Recital Treasures", "Ready to Sing", "Rockkidz Play-alongs", "RWS - All Together", "RWS - Beginning Band", "RWS - Beginning Strings", "RWS - Concert Band", "RWS - Concert Orchestra", "RWS - Concert Strings", "RWS - Custom Concert Band", "RWS - Developing Band", "RWS - Developing Orchestra", "RWS - Developing Strings", "RWS - Festival Ensemble", "RWS - Festival Solo", "RWS - Infinity Percussion", "RWS - Symphonic Strings", "RWS - Symphony Band", "RWS - Symphony Orchestra", "RWS - Very Beginning Band", "RWS - Very Beginning Strings", "Sacred Choral Series", "Sacred Performer Collections", "Signature Series", "Sing at First Sight", "Singer's Library Series", "Solo Celebration", "Sound Innovations Series for Band", "Sound Innovations Series for Strings", "Sound Innovations Soloist for Intermediate Musicians", "Sound Innovations Sound Performance for Band", "Spotlight on Kids Series", "Standard Library Series", "Strictly Strings", "String Explorer", "Studio PR", "Summy-Birchard Music", "Suzuki Flute School", "Suzuki Guitar School", "Teach Yourself Series", "The Elmer Iseler Choral Series", "The Suzuki Method", "The Ultimate Beginner Series", "This Is Music!", "Thompson Choral Library", "Toronto Children's Chorus Choral Series", "Two-Gether We Sing", "Ultimate Play-Along", "Ultimate Vocal Sing-Along", "Very Easy Pops", "Vocal Complete", "Vocalize!", "Warner Bros. Chartbuster Series", "Warner Bros. Choral Library", "WB Dance Series", "Wilfin String Orchestra: Young String Ensemble Series", "World Music Series", "Young Symphonic Series"];
 
@@ -2204,7 +2204,9 @@ function showSeriesSuggestions(cardId, validation, c) {
 function onSeriesChange(cardId, val) {
   const c = contracts.find(x => x._id === cardId);
   if (!c) return;
-  c.series = val;
+  // Series is a single-line field too — same tab/line-break stripping as
+  // Title/Subtitle/Supertitle (see sanitizeSingleLine).
+  c.series = sanitizeSingleLine(val);
   const validation = validateSeries(val, getSeries());
   const badgeEl = document.getElementById(`${cardId}-series-badge`);
   if (badgeEl) badgeEl.innerHTML = validBadge(validation.status);
@@ -2266,8 +2268,14 @@ function revertCreditLine(cardId) {
   if (el) el.value = original;
 }
 
+// Title/Subtitle/Supertitle are single-line fields — strip tabs/line breaks in
+// addition to the usual smart-quote/dash cleanup (see sanitizeSingleLine above).
+// Other fields routed through here (e.g. Piano's Series Blurb) keep the lighter
+// sanitizeBlurb-only treatment, matching the Blurbs tab's prose fields.
+const SINGLE_LINE_TEXT_FIELDS = new Set(['title', 'subtitle', 'supertitle']);
+
 function updateTextField(cardId, field, val, el) {
-  const sanitized = sanitizeBlurb(val);
+  const sanitized = SINGLE_LINE_TEXT_FIELDS.has(field) ? sanitizeSingleLine(val) : sanitizeBlurb(val);
   if (el && sanitized !== val) {
     const cursor = el.selectionStart;
     const delta  = sanitized.length - val.length;
@@ -3038,6 +3046,25 @@ function sanitizeBlurb(val) {
     .replace(/[‘’]/g, "'")    // smart single quotes → '
     .replace(/—/g, '---')          // em-dash → ---
     .replace(/–/g, '--');          // en-dash → --
+}
+
+// Fixed 2026-08-06: a Piano title got pasted in with 8 trailing tab characters
+// (almost certainly from copying a spreadsheet row where the trailing cells were
+// blank — Excel/Sheets clipboard text is tab-separated per cell, and a plain text
+// input just inserts that literally). sanitizeBlurb() only ever handled smart
+// quotes/dashes, so the tabs sailed straight through into BOTH "Web clean title"
+// and "TitleForSorting" (which mirrors title verbatim when there's no "The/A/An"
+// prefix) — 8 tabs x 2 fields = the exact "16 tabs" FileMaker rejected the import
+// for. Title/Subtitle/Supertitle/Series are single-line fields that should never
+// contain a tab or line break, so this strips them outright rather than just
+// warning (unlike the Blurbs tab, which intentionally only warns — see
+// checkBlurbErrors below — since blurb prose has more legitimate reasons for a
+// user to want to review before anything gets changed).
+function sanitizeSingleLine(val) {
+  return sanitizeBlurb(val)
+    .replace(/[\t\r\n]+/g, ' ')  // tabs/newlines/carriage returns -> single space
+    .replace(/ {2,}/g, ' ')      // collapse any resulting double spaces
+    .trim();
 }
 
 function checkBlurbErrors(val) {
