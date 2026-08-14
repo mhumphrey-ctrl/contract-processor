@@ -391,7 +391,7 @@ var _syncSeriesCount  = 0;
 // =============================================
 // CONSTANTS & DATA
 // =============================================
-const APP_VERSION = 'v1.23';
+const APP_VERSION = 'v1.24';
 
 const BASE_SERIES = ["101 Series", "26 Italian Songs and Arias", "Accent on Achievement", "Active Listening Lessons", "Adventures in Music Listening", "Alfred Archive Edition", "Alfred Choral", "Alfred Choral Designs", "Alfred Church Choral Series", "Alfred Classroom Resources", "Alfred Concert Band Series", "Alfred Debut Series", "Alfred Pop Choral Series", "All About... Crossword Series", "Band Expressions Book One", "Band Expressions Book Two", "Basix® Series", "Belwin Beginning Band", "Belwin Beginning Full Orchestra", "Belwin Beginning String Orchestra", "Belwin Classic Band", "Belwin Concert Band", "Belwin Concert Full Orchestra", "Belwin Concert String Orchestra", "Belwin Contemporary Church Series", "Belwin Edition", "Belwin Festival Series", "Belwin First Year", "Belwin Intermediate Full Orchestra", "Belwin Intermediate String Orchestra", "Belwin Jazz Band Series", "Belwin Jazz Beginnings", "Belwin Jazz Expressions Series", "Belwin Jazz for Young People", "Belwin Jazz Legends Series", "Belwin Jazz Small Ensemble", "Belwin Jazz Vocal Series", "Belwin Pop Beginning Band", "Belwin Pop Beginning Full Orchestra", "Belwin Pop Beginning String Orchestra", "Belwin Pop Concert Band", "Belwin Pop Concert String Orchestra", "Belwin Pop Intermediate Full Orchestra", "Belwin Pop Intermediate String Orchestra", "Belwin Pop Symphonic Band", "Belwin Pop Symphonic Full Orchestra", "Belwin Pop Symphonic String Orchestra", "Belwin Pop Young Band", "Belwin Premier Jazz", "Belwin Symphonic Band", "Belwin Symphonic Full Orchestra", "Belwin Symphonic String Orchestra", "Belwin Very Beginning Band", "Belwin Very Beginning String Orchestra", "Belwin Young Band", "Belwin Young Jazz", "Big & Easy", "Bowmar Orchestral Library", "Brubecks Big Band", "Challenger Series", "Choral Movement Series", "Classic Choral Series", "Contemporary Sacred Choral Series", "Developing Band", "Developing SATB Repertoire", "Diamond Series", "Digital Sheet Music - Easy Piano", "Digital Sheet Music - Guitar Solo", "Digital Sheet Music Piano", "Digital Sheet Music PVC", "Digital Sheet Music PVG", "Donald Hunsberger Wind Library", "Duets for All", "Easy Choral Masterworks Series", "Easy Pops", "Eighth Note Publications", "Ensembles for All", "For Solo Singers", "For Two Series", "Foundations Band", "Foundations Strings", "Franco Colombo Choral Series", "Gary Fry Choral Series", "Gateway Series", "Gordon Goodwin Little Phat Band Series", "Gordon Goodwin Series", "H. W. Gray", "Highland Full Orchestra", "Highland String Orchestra", "Highland/Etling First Philharmonic", "Highland/Etling String Alternatives", "Hot Pop Band", "Hot Pop Strings", "I Sing, You Sing", "J. Fischer & Bro. Choral Series", "Jazz at Lincoln Center", "Jazz Improvisation Series", "Kalmus Edition", "Lawson-Gould", "Lawson-Gould: Robert DeCormier Choral Series", "Lawson-Gould: The Dave Brubeck Series", "Learning with Classroom Musicals Series", "MakeMusic Concert Band", "MakeMusic Developing Band", "MakeMusic Developing Strings", "MakeMusic First Performance Band", "MakeMusic First Performance Strings", "MakeMusic Full Orchestra", "MakeMusic Intermediate Strings", "MakeMusic String Orchestra", "MakeMusic Symphonic Band", "MakeMusic Symphony Orchestra", "MakeMusic Symphony Strings", "MakeMusic Young Band", "Mark Wood Series", "Meet the Instruments", "Mega Sounds", "Music for Little Mozarts", "New Directions Choral Series", "Nine Noteworthy", "Orchestra Expressions Book One", "Orchestra Expressions Book Two", "Original Sheet Music", "Partner Songbooks", "Pathways of Song Series", "Portraits of Great Composers", "Premier Series for Marching Band", "Premiere Performance", "Professional Orchestra Series", "Rare Recital Treasures", "Ready to Sing", "Rockkidz Play-alongs", "RWS - All Together", "RWS - Beginning Band", "RWS - Beginning Strings", "RWS - Concert Band", "RWS - Concert Orchestra", "RWS - Concert Strings", "RWS - Custom Concert Band", "RWS - Developing Band", "RWS - Developing Orchestra", "RWS - Developing Strings", "RWS - Festival Ensemble", "RWS - Festival Solo", "RWS - Infinity Percussion", "RWS - Symphonic Strings", "RWS - Symphony Band", "RWS - Symphony Orchestra", "RWS - Very Beginning Band", "RWS - Very Beginning Strings", "Sacred Choral Series", "Sacred Performer Collections", "Signature Series", "Sing at First Sight", "Singer's Library Series", "Solo Celebration", "Sound Innovations Series for Band", "Sound Innovations Series for Strings", "Sound Innovations Soloist for Intermediate Musicians", "Sound Innovations Sound Performance for Band", "Spotlight on Kids Series", "Standard Library Series", "Strictly Strings", "String Explorer", "Studio PR", "Summy-Birchard Music", "Suzuki Flute School", "Suzuki Guitar School", "Teach Yourself Series", "The Elmer Iseler Choral Series", "The Suzuki Method", "The Ultimate Beginner Series", "This Is Music!", "Thompson Choral Library", "Toronto Children's Chorus Choral Series", "Two-Gether We Sing", "Ultimate Play-Along", "Ultimate Vocal Sing-Along", "Very Easy Pops", "Vocal Complete", "Vocalize!", "Warner Bros. Chartbuster Series", "Warner Bros. Choral Library", "WB Dance Series", "Wilfin String Orchestra: Young String Ensemble Series", "World Music Series", "Young Symphonic Series"];
 
@@ -2066,7 +2066,7 @@ function populateInfoTab(c, cardId) {
   let html = `
     <div class="field-group">
       <label class="field-label">Title</label>
-      <input class="field-input" value="${escHtml(c.title)}" oninput="updateTextField('${cardId}','title',this.value,this)" />
+      <input class="field-input" value="${escHtml(c.title)}" oninput="updateTextField('${cardId}','title',this.value,this)" onblur="updateTextField('${cardId}','title',this.value,this,true)" />
     </div>
     <div class="field-group">
       <label class="field-label">Sort Key <span class="field-label-note">auto-computed</span></label>
@@ -2075,11 +2075,11 @@ function populateInfoTab(c, cardId) {
     <div class="field-row">
       <div class="field-group">
         <label class="field-label">Subtitle</label>
-        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" />
+        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" onblur="updateTextField('${cardId}','subtitle',this.value,this,true)" />
       </div>
       <div class="field-group">
         <label class="field-label">Supertitle</label>
-        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" />
+        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" onblur="updateTextField('${cardId}','supertitle',this.value,this,true)" />
       </div>
     </div>
     <div class="field-group">
@@ -2274,8 +2274,8 @@ function revertCreditLine(cardId) {
 // sanitizeBlurb-only treatment, matching the Blurbs tab's prose fields.
 const SINGLE_LINE_TEXT_FIELDS = new Set(['title', 'subtitle', 'supertitle']);
 
-function updateTextField(cardId, field, val, el) {
-  const sanitized = SINGLE_LINE_TEXT_FIELDS.has(field) ? sanitizeSingleLine(val) : sanitizeBlurb(val);
+function updateTextField(cardId, field, val, el, isBlur) {
+  const sanitized = SINGLE_LINE_TEXT_FIELDS.has(field) ? sanitizeSingleLine(val, !isBlur) : sanitizeBlurb(val);
   if (el && sanitized !== val) {
     const cursor = el.selectionStart;
     const delta  = sanitized.length - val.length;
@@ -2562,8 +2562,8 @@ function refreshPianoWarningsUI(cardId) {
   if (panel) populateTagsTab(c, cardId);
 }
 
-function updatePianoTitle(cardId, val, el) {
-  updateTextField(cardId, 'title', val, el);
+function updatePianoTitle(cardId, val, el, isBlur) {
+  updateTextField(cardId, 'title', val, el, isBlur);
   refreshPianoWarningsUI(cardId);
 }
 
@@ -2597,7 +2597,7 @@ function populatePianoInfoTab(c, cardId) {
     </div>
     <div class="field-group">
       <label class="field-label">Title</label>
-      <input class="field-input" value="${escHtml(c.title)}" oninput="updatePianoTitle('${cardId}',this.value,this)" />
+      <input class="field-input" value="${escHtml(c.title)}" oninput="updatePianoTitle('${cardId}',this.value,this)" onblur="updatePianoTitle('${cardId}',this.value,this,true)" />
     </div>
     <div class="field-group">
       <label class="field-label">Sort Key <span class="field-label-note">auto-computed — no bracketed suffix for Piano (unlike Choral)</span></label>
@@ -2606,11 +2606,11 @@ function populatePianoInfoTab(c, cardId) {
     <div class="field-row">
       <div class="field-group">
         <label class="field-label">Subtitle</label>
-        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" />
+        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" onblur="updateTextField('${cardId}','subtitle',this.value,this,true)" />
       </div>
       <div class="field-group">
         <label class="field-label">Supertitle</label>
-        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" />
+        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" onblur="updateTextField('${cardId}','supertitle',this.value,this,true)" />
       </div>
     </div>
     <div class="field-group">
@@ -3060,11 +3060,20 @@ function sanitizeBlurb(val) {
 // warning (unlike the Blurbs tab, which intentionally only warns — see
 // checkBlurbErrors below — since blurb prose has more legitimate reasons for a
 // user to want to review before anything gets changed).
-function sanitizeSingleLine(val) {
-  return sanitizeBlurb(val)
+//
+// Fixed 2026-08-14: the unconditional .trim() here was running on every single
+// keystroke (this fires from oninput), so any trailing space a user typed —
+// which is most of them, since that's how you get to the next word — was
+// stripped the instant it was typed. It looked exactly like the spacebar
+// didn't work in Title/Subtitle/Supertitle. keepEdges lets callers skip the
+// edge trim while the user is actively typing; the trim still happens once,
+// on blur, so stray leading/trailing whitespace (e.g. from the tab-collapse
+// above) still gets cleaned up before the value is saved/exported.
+function sanitizeSingleLine(val, keepEdges) {
+  const cleaned = sanitizeBlurb(val)
     .replace(/[\t\r\n]+/g, ' ')  // tabs/newlines/carriage returns -> single space
-    .replace(/ {2,}/g, ' ')      // collapse any resulting double spaces
-    .trim();
+    .replace(/ {2,}/g, ' ');     // collapse any resulting double spaces
+  return keepEdges ? cleaned : cleaned.trim();
 }
 
 function checkBlurbErrors(val) {
