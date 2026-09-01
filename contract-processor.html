@@ -76,6 +76,9 @@ input, textarea, select { font-family: inherit; }
 }
 .piano-type-btn:hover { border-color: #93c5fd; }
 .piano-type-btn.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+.classroom-item-row { border: 1px solid #e0e4ea; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+.classroom-item-row-main { display: flex; gap: 6px; }
+.classroom-item-voicing-label { font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 3px; }
 
 /* ===== CARDS ===== */
 .cards-list { display: flex; flex-direction: column; gap: 12px; }
@@ -294,7 +297,7 @@ input, textarea, select { font-family: inherit; }
       <div class="new-record-menu" id="newRecordMenu">
         <button class="new-record-menu-item" onclick="addScratchCard(); closeNewRecordMenu();">Band/Orch/Choral</button>
         <button class="new-record-menu-item" onclick="addPianoScratchCard(); closeNewRecordMenu();">Piano</button>
-        <button class="new-record-menu-item" disabled title="Coming soon">Classroom/Choral Book <span class="menu-item-note">(coming soon)</span></button>
+        <button class="new-record-menu-item" onclick="addClassroomScratchCard(); closeNewRecordMenu();">Classroom/Choral Book</button>
       </div>
     </div>
   </div>
@@ -391,7 +394,7 @@ var _syncSeriesCount  = 0;
 // =============================================
 // CONSTANTS & DATA
 // =============================================
-const APP_VERSION = 'v1.24';
+const APP_VERSION = 'v1.25';
 
 const BASE_SERIES = ["101 Series", "26 Italian Songs and Arias", "Accent on Achievement", "Active Listening Lessons", "Adventures in Music Listening", "Alfred Archive Edition", "Alfred Choral", "Alfred Choral Designs", "Alfred Church Choral Series", "Alfred Classroom Resources", "Alfred Concert Band Series", "Alfred Debut Series", "Alfred Pop Choral Series", "All About... Crossword Series", "Band Expressions Book One", "Band Expressions Book Two", "Basix® Series", "Belwin Beginning Band", "Belwin Beginning Full Orchestra", "Belwin Beginning String Orchestra", "Belwin Classic Band", "Belwin Concert Band", "Belwin Concert Full Orchestra", "Belwin Concert String Orchestra", "Belwin Contemporary Church Series", "Belwin Edition", "Belwin Festival Series", "Belwin First Year", "Belwin Intermediate Full Orchestra", "Belwin Intermediate String Orchestra", "Belwin Jazz Band Series", "Belwin Jazz Beginnings", "Belwin Jazz Expressions Series", "Belwin Jazz for Young People", "Belwin Jazz Legends Series", "Belwin Jazz Small Ensemble", "Belwin Jazz Vocal Series", "Belwin Pop Beginning Band", "Belwin Pop Beginning Full Orchestra", "Belwin Pop Beginning String Orchestra", "Belwin Pop Concert Band", "Belwin Pop Concert String Orchestra", "Belwin Pop Intermediate Full Orchestra", "Belwin Pop Intermediate String Orchestra", "Belwin Pop Symphonic Band", "Belwin Pop Symphonic Full Orchestra", "Belwin Pop Symphonic String Orchestra", "Belwin Pop Young Band", "Belwin Premier Jazz", "Belwin Symphonic Band", "Belwin Symphonic Full Orchestra", "Belwin Symphonic String Orchestra", "Belwin Very Beginning Band", "Belwin Very Beginning String Orchestra", "Belwin Young Band", "Belwin Young Jazz", "Big & Easy", "Bowmar Orchestral Library", "Brubecks Big Band", "Challenger Series", "Choral Movement Series", "Classic Choral Series", "Contemporary Sacred Choral Series", "Developing Band", "Developing SATB Repertoire", "Diamond Series", "Digital Sheet Music - Easy Piano", "Digital Sheet Music - Guitar Solo", "Digital Sheet Music Piano", "Digital Sheet Music PVC", "Digital Sheet Music PVG", "Donald Hunsberger Wind Library", "Duets for All", "Easy Choral Masterworks Series", "Easy Pops", "Eighth Note Publications", "Ensembles for All", "For Solo Singers", "For Two Series", "Foundations Band", "Foundations Strings", "Franco Colombo Choral Series", "Gary Fry Choral Series", "Gateway Series", "Gordon Goodwin Little Phat Band Series", "Gordon Goodwin Series", "H. W. Gray", "Highland Full Orchestra", "Highland String Orchestra", "Highland/Etling First Philharmonic", "Highland/Etling String Alternatives", "Hot Pop Band", "Hot Pop Strings", "I Sing, You Sing", "J. Fischer & Bro. Choral Series", "Jazz at Lincoln Center", "Jazz Improvisation Series", "Kalmus Edition", "Lawson-Gould", "Lawson-Gould: Robert DeCormier Choral Series", "Lawson-Gould: The Dave Brubeck Series", "Learning with Classroom Musicals Series", "MakeMusic Concert Band", "MakeMusic Developing Band", "MakeMusic Developing Strings", "MakeMusic First Performance Band", "MakeMusic First Performance Strings", "MakeMusic Full Orchestra", "MakeMusic Intermediate Strings", "MakeMusic String Orchestra", "MakeMusic Symphonic Band", "MakeMusic Symphony Orchestra", "MakeMusic Symphony Strings", "MakeMusic Young Band", "Mark Wood Series", "Meet the Instruments", "Mega Sounds", "Music for Little Mozarts", "New Directions Choral Series", "Nine Noteworthy", "Orchestra Expressions Book One", "Orchestra Expressions Book Two", "Original Sheet Music", "Partner Songbooks", "Pathways of Song Series", "Portraits of Great Composers", "Premier Series for Marching Band", "Premiere Performance", "Professional Orchestra Series", "Rare Recital Treasures", "Ready to Sing", "Rockkidz Play-alongs", "RWS - All Together", "RWS - Beginning Band", "RWS - Beginning Strings", "RWS - Concert Band", "RWS - Concert Orchestra", "RWS - Concert Strings", "RWS - Custom Concert Band", "RWS - Developing Band", "RWS - Developing Orchestra", "RWS - Developing Strings", "RWS - Festival Ensemble", "RWS - Festival Solo", "RWS - Infinity Percussion", "RWS - Symphonic Strings", "RWS - Symphony Band", "RWS - Symphony Orchestra", "RWS - Very Beginning Band", "RWS - Very Beginning Strings", "Sacred Choral Series", "Sacred Performer Collections", "Signature Series", "Sing at First Sight", "Singer's Library Series", "Solo Celebration", "Sound Innovations Series for Band", "Sound Innovations Series for Strings", "Sound Innovations Soloist for Intermediate Musicians", "Sound Innovations Sound Performance for Band", "Spotlight on Kids Series", "Standard Library Series", "Strictly Strings", "String Explorer", "Studio PR", "Summy-Birchard Music", "Suzuki Flute School", "Suzuki Guitar School", "Teach Yourself Series", "The Elmer Iseler Choral Series", "The Suzuki Method", "The Ultimate Beginner Series", "This Is Music!", "Thompson Choral Library", "Toronto Children's Chorus Choral Series", "Two-Gether We Sing", "Ultimate Play-Along", "Ultimate Vocal Sing-Along", "Very Easy Pops", "Vocal Complete", "Vocalize!", "Warner Bros. Chartbuster Series", "Warner Bros. Choral Library", "WB Dance Series", "Wilfin String Orchestra: Young String Ensemble Series", "World Music Series", "Young Symphonic Series"];
 
@@ -1928,6 +1931,8 @@ function renderAllCards() {
       list.appendChild(wrapper); // must be in DOM before populate functions run
       if (c.recordType === 'piano') {
         populatePianoInfoTab(c, c._id);
+      } else if (c.recordType === 'classroom') {
+        populateClassroomInfoTab(c, c._id);
       } else {
         populateInfoTab(c, c._id);
       }
@@ -1978,6 +1983,10 @@ function createCard(c) {
   if (c.recordType === 'piano') {
     catalogDisplay = `<span id="${id}-catalog-display">${escHtml(c.catalog_num || '—')}</span>`;
     typeBadge = `<span class="badge badge-blue">Piano</span> <span class="badge badge-gray" id="${id}-format-badge">${escHtml(c.pianoType || '')}</span>`;
+  } else if (c.recordType === 'classroom') {
+    catalogDisplay = `<span id="${id}-catalog-display">${escHtml(c.catalog_num || '—')}</span>`;
+    const iCount = (c.items || []).length;
+    typeBadge = `<span class="badge badge-blue">Classroom/Choral</span> <span class="badge badge-gray" id="${id}-item-badge">${iCount} item${iCount !== 1 ? 's' : ''}</span>`;
   } else if (c.isChoral) {
     catalogDisplay = `<span id="${id}-catalog-display">${escHtml(c.catalog_num || '—')}</span>`;
     const iCount = (c.items || c.voicings || []).length;
@@ -2651,6 +2660,251 @@ function populatePianoInfoTab(c, cardId) {
 }
 
 // =============================================
+// CLASSROOM/CHORAL BOOK SCRATCH CARD
+// =============================================
+// Separate record type from both the Band/Orch/Choral "scratch" card and Piano, by
+// design — Classroom/Choral Books have a variable number of format-variant items per
+// title (resolved with Matt 2026-09-01, open question #1: one title can have 2-8+
+// sibling item numbers, one per format), a distinct FMcategory vocabulary (5 real
+// categories, user-picked per record — open question #3), and its own Voicing
+// vocabulary that doesn't overlap with CHORAL_VOICING_CONFIG (open question #7).
+// Keeping this on its own data shape/functions means nothing here can regress
+// Band/Orch/Choral or Piano.
+function addClassroomScratchCard() {
+  const scratchId = 'card-classroom-' + Date.now();
+  const blankContract = {
+    _id: scratchId,
+    filename: 'New Classroom/Choral Record',
+    recordType: 'classroom',
+    isChoral: false,
+    catalog_num: '00-',
+    pub_num: '00',
+    set_item: '',
+    items: [makeBlankClassroomItem()],   // variable list — one row per format variant
+    fmCategory: '',
+    title: '', subtitle: '', supertitle: '',
+    series: '', series_raw: '',
+    contributors: [],
+    creditLine: '', _originalCreditLine: '',
+    primaryLastName: '',
+    sortKey: '',
+    short_blurb: '', long_blurb: '',
+    short_blurb_final: '', long_blurb_final: '',
+    level: '', gradeNum: '', duration: '',
+    eFields: {},
+    tagData: { genre: [], musicalForm: [], specialFeatures: [], webSource: [], warnings: [] },
+    tags: {
+      genre: new Set(), musicalForm: new Set(), specialFeatures: new Set(),
+      webSource: new Set(), holiday: new Set(), occasion: new Set(),
+      season: new Set(), era: new Set(),
+    },
+    allWarnings: [],
+  };
+  contracts.push(blankContract);
+  sortContracts();
+  renderAllCards();
+  updateCounter();
+  const newCardEl = document.getElementById(blankContract._id);
+  if (newCardEl) newCardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function makeBlankClassroomItem() {
+  return { itemnum: '', format: '', formatOther: '', voicing: [], voicingOther: '' };
+}
+
+// Resolved with Matt 2026-09-01 (open question #1): preset list is every Format value
+// that showed up more than once in the source metadata (13 values), plus a free-text
+// "Other" escape hatch for genuine one-offs (posters, flashcards, teacher's handbooks —
+// about 8% of records). Matt asked to include everything that appeared even twice,
+// with room to cull the list down later once the team has used it a while.
+const CLASSROOM_FORMAT_PRESETS = [
+  'Digital Download','Book & Online PDF','Book','Book & Online PDF/Audio','Enhanced CD',
+  'Online Audio','CD','PDF','Book & Online Media','Book & Online Audio/PDF','Poster',
+  'Accompaniment CD','Book & Online Audio',
+];
+const CLASSROOM_FORMAT_OTHER = '__other__';
+
+// Resolved with Matt 2026-09-01 (open question #7): Voicing here is a different
+// vocabulary than CHORAL_VOICING_CONFIG (which is choir-ensemble voicings like SATB/
+// TTBB) — this is vocal-range language for solo/duet arrangements, used in only ~12%
+// of source records. Matt chose a dropdown of every observed value (option 1) plus a
+// free-text "Other", and it supports selecting more than one (the source data has a
+// real "2-Part + Unison" combo record).
+const CLASSROOM_VOICING_PRESETS = [
+  'Any Voice Combination','Choir','Medium High','Medium Low','Unison','2-Part',"Men's Choir",'Medium Voice',
+];
+
+// Resolved with Matt 2026-09-01 (open question #3): unlike Choral Octavo (always
+// fixed to 'Choral Octavo') or Piano (always blank/manual), Classroom/Choral has 5
+// real FMcategory values in active use with no clean derivation rule — user picks
+// explicitly per record (option 2).
+const CLASSROOM_FMCATEGORY_OPTIONS = [
+  'General Music and Classroom Publications',
+  'Musicals and Programs',
+  'Vocal Collection',
+  'Choral Collection',
+  'Choral Warm-Up Collection',
+];
+
+function addClassroomItem(cardId) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  if (!c.items) c.items = [];
+  c.items.push(makeBlankClassroomItem());
+  updateItemCatalogNum(c, cardId);
+  populateClassroomInfoTab(c, cardId);
+}
+
+function deleteClassroomItem(cardId, idx) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  c.items.splice(idx, 1);
+  if (!c.items.length) c.items.push(makeBlankClassroomItem());
+  updateItemCatalogNum(c, cardId);
+  populateClassroomInfoTab(c, cardId);
+}
+
+function updateClassroomItem(cardId, idx, field, val) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c || !c.items[idx]) return;
+  c.items[idx][field] = val;
+  if (field === 'itemnum') updateItemCatalogNum(c, cardId);
+}
+
+function updateClassroomItemFormat(cardId, idx, val) {
+  updateClassroomItem(cardId, idx, 'format', val);
+  const otherEl = document.getElementById(`${cardId}-item${idx}-format-other`);
+  if (otherEl) otherEl.style.display = (val === CLASSROOM_FORMAT_OTHER) ? 'block' : 'none';
+}
+
+function toggleClassroomItemVoicing(cardId, idx, value, checked) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c || !c.items[idx]) return;
+  const item = c.items[idx];
+  const set = new Set(item.voicing || []);
+  if (checked) set.add(value); else set.delete(value);
+  item.voicing = [...set];
+}
+
+function updateClassroomFMCategory(cardId, val) {
+  const c = contracts.find(x => x._id === cardId);
+  if (!c) return;
+  c.fmCategory = val;
+}
+
+// Small helper for embedding a hardcoded (non-user-input) string as a JS string
+// literal inside an inline onXXX="...('...')" handler — escHtml() alone doesn't
+// escape single quotes, which would break "Men's Choir" in CLASSROOM_VOICING_PRESETS.
+function escJsAttr(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function classroomItemRowHtml(cardId, idx, item) {
+  const selectedVoicing = item.voicing || [];
+  let html = `<div class="classroom-item-row">
+    <div class="classroom-item-row-main">
+      <input class="field-input voicing-item-input" style="flex:0 0 140px;" placeholder="Item #"
+        value="${escHtml(item.itemnum)}" oninput="updateClassroomItem('${cardId}',${idx},'itemnum',this.value)" />
+      <select class="field-input" style="flex:1;" onchange="updateClassroomItemFormat('${cardId}',${idx},this.value)">
+        <option value="">— Format —</option>
+        ${CLASSROOM_FORMAT_PRESETS.map(f => `<option value="${escHtml(f)}" ${item.format===f?'selected':''}>${escHtml(f)}</option>`).join('')}
+        <option value="${CLASSROOM_FORMAT_OTHER}" ${item.format===CLASSROOM_FORMAT_OTHER?'selected':''}>Other (type your own)</option>
+      </select>
+      <button class="voicing-delete-btn" onclick="deleteClassroomItem('${cardId}',${idx})" title="Remove item">×</button>
+    </div>
+    <input class="field-input" id="${cardId}-item${idx}-format-other" placeholder="Type format"
+      style="margin-top:6px;display:${item.format===CLASSROOM_FORMAT_OTHER?'block':'none'};"
+      value="${escHtml(item.formatOther||'')}" oninput="updateClassroomItem('${cardId}',${idx},'formatOther',this.value)" />
+    <div style="margin-top:6px;">
+      <div class="classroom-item-voicing-label">Voicing <span class="field-label-note">optional</span></div>
+      <div class="tag-checkboxes">
+        ${CLASSROOM_VOICING_PRESETS.map(v => `<label class="tag-check-label">
+          <input type="checkbox" ${selectedVoicing.includes(v)?'checked':''}
+            onchange="toggleClassroomItemVoicing('${cardId}',${idx},'${escJsAttr(v)}',this.checked)">
+          ${escHtml(v)}
+        </label>`).join('')}
+      </div>
+      <input class="field-input" style="margin-top:4px;" placeholder="Other voicing (optional)"
+        value="${escHtml(item.voicingOther||'')}" oninput="updateClassroomItem('${cardId}',${idx},'voicingOther',this.value)" />
+    </div>
+  </div>`;
+  return html;
+}
+
+// =============================================
+// CLASSROOM/CHORAL INFO TAB
+// =============================================
+// Deliberately NOT reusing populateInfoTab() — same reasoning as Piano: Classroom/
+// Choral has no ensemble/Flexible Instrumentation, a variable-count items list
+// instead of the fixed score/set pair, and several field rules resolved specifically
+// for this record type (see the consts and comments above).
+function populateClassroomInfoTab(c, cardId) {
+  const panel = document.getElementById(`${cardId}-info`);
+  const seriesValid = validateSeries(c.series, getSeries());
+  const seriesBadge = validBadge(seriesValid.status);
+  const items = c.items && c.items.length ? c.items : [makeBlankClassroomItem()];
+  if (!c.items || !c.items.length) c.items = items;
+
+  let html = `
+    <div class="field-group">
+      <label class="field-label">Title</label>
+      <input class="field-input" value="${escHtml(c.title)}" oninput="updateTextField('${cardId}','title',this.value,this)" onblur="updateTextField('${cardId}','title',this.value,this,true)" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Sort Key <span class="field-label-note">auto-computed — the [LastName#of#] suffix is added automatically at export time</span></label>
+      <input class="field-input" id="${cardId}-sortkey" style="font-size:0.82rem;color:#666;" value="${escHtml(c.sortKey)}" oninput="updateField('${cardId}','sortKey',this.value)" />
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Subtitle</label>
+        <input class="field-input" value="${escHtml(c.subtitle)}" oninput="updateTextField('${cardId}','subtitle',this.value,this)" onblur="updateTextField('${cardId}','subtitle',this.value,this,true)" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Supertitle</label>
+        <input class="field-input" value="${escHtml(c.supertitle)}" oninput="updateTextField('${cardId}','supertitle',this.value,this)" onblur="updateTextField('${cardId}','supertitle',this.value,this,true)" />
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Series</label>
+      <div class="field-with-badge">
+        <input class="field-input" id="${cardId}-series-input" value="${escHtml(c.series)}" oninput="onSeriesChange('${cardId}',this.value)" />
+        <span id="${cardId}-series-badge">${seriesBadge}</span>
+      </div>
+      <div id="${cardId}-series-suggestions" class="suggestions"></div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">FMcategory</label>
+      <select class="field-input" onchange="updateClassroomFMCategory('${cardId}',this.value)" style="width:100%">
+        <option value="">— choose —</option>
+        ${CLASSROOM_FMCATEGORY_OPTIONS.map(o => `<option value="${escHtml(o)}" ${c.fmCategory===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field-row" style="margin-top:8px;">
+      <div class="field-group" style="flex:0 0 200px">
+        <label class="field-label">Level <span class="field-label-note">exports as-is — grade breakdown handled manually in FileMaker after import</span></label>
+        <input class="field-input" value="${escHtml(c.level||'')}" oninput="updateField('${cardId}','level',this.value)" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Duration <span class="field-label-note">optional</span></label>
+        <input class="field-input" placeholder="e.g. 3:45" value="${escHtml(c.duration||'')}" oninput="updateField('${cardId}','duration',this.value)" />
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:8px;">
+      <label class="field-label">Items <span class="field-label-note">${items.length} row${items.length!==1?'s':''} → CSV, one per format</span></label>
+      <div id="${cardId}-classroom-item-rows">
+        ${items.map((item, idx) => classroomItemRowHtml(cardId, idx, item)).join('')}
+      </div>
+      <button class="btn btn-sm" style="margin-top:6px;" onclick="addClassroomItem('${cardId}')">+ Add Item</button>
+    </div>
+    <div class="field-group" style="font-size: 0.78rem; color: #999;">
+      WebProductType, WebProductSubType, GradeNum, WebGrade, RetailUpCode, NAMM, and BISAC are all filled in manually in FileMaker after import — nothing to set here.
+    </div>`;
+
+  panel.innerHTML = html;
+  showSeriesSuggestions(cardId, seriesValid, c);
+}
+
+// =============================================
 // CONTRIBUTORS TAB
 // =============================================
 function populateContributorsTab(c, cardId) {
@@ -2684,6 +2938,15 @@ function renderContributorsTab(c, cardId, panel) {
     html += `<div class="credit-preview" style="margin-top:10px;">
       <div class="credit-preview-label">Ed catalog style <span class="field-label-note">auto-computed — last contributor's last name, or the composer's if the rest are Editors</span></div>
       <div class="field-input readonly" id="${cardId}-edcatstyle-preview" style="margin-top:4px;">${escHtml(pianoEdCatalogStyle(c))}</div>
+    </div>`;
+  }
+  // Classroom/Choral: same live preview, but always just the last contributor's last
+  // name — resolved with Matt 2026-09-01 (open question #2) to match the existing
+  // Band/Orch/Choral rule rather than Piano's composer/editor exception.
+  if (c.recordType === 'classroom') {
+    html += `<div class="credit-preview" style="margin-top:10px;">
+      <div class="credit-preview-label">Ed catalog style <span class="field-label-note">auto-computed — last contributor's last name</span></div>
+      <div class="field-input readonly" id="${cardId}-edcatstyle-preview" style="margin-top:4px;">${escHtml(c.primaryLastName||'')}</div>
     </div>`;
   }
 
@@ -2745,6 +3008,10 @@ function updateContrib(cardId, idx, field, val) {
   if ((field === 'name' || field === 'role') && c.recordType === 'piano') {
     const previewEl = document.getElementById(`${cardId}-edcatstyle-preview`);
     if (previewEl) previewEl.textContent = pianoEdCatalogStyle(c);
+  }
+  if ((field === 'name' || field === 'role') && c.recordType === 'classroom') {
+    const previewEl = document.getElementById(`${cardId}-edcatstyle-preview`);
+    if (previewEl) previewEl.textContent = c.primaryLastName || '';
   }
 }
 
@@ -3981,6 +4248,138 @@ function buildPianoRow(c) {
   return row;
 }
 
+// =============================================
+// CLASSROOM/CHORAL ROW BUILDER
+// =============================================
+// Deliberately separate from contractToRow()/choralVoicingToRow()/buildPianoRow() —
+// Classroom/Choral Books have a variable number of format-variant items per title
+// (open question #1) rather than a fixed score/set pair or single item, plus its own
+// FMcategory/PLS Assigned/New Issue Codes Teams/Voicing rules resolved with Matt on
+// 2026-09-01. Produces one row per item, same "one card, several format rows" shape
+// as Choral Octavo's one-row-per-voicing.
+function classroomResolvedFormat(item) {
+  return item.format === CLASSROOM_FORMAT_OTHER ? (item.formatOther || '') : (item.format || '');
+}
+
+function classroomResolvedVoicing(item) {
+  const list = [...(item.voicing || [])];
+  if (item.voicingOther && item.voicingOther.trim()) list.push(item.voicingOther.trim());
+  return list;
+}
+
+function buildClassroomRows(c) {
+  const items = (c.items && c.items.length) ? c.items : [makeBlankClassroomItem()];
+  const total = items.length;
+  const lastName = (c.primaryLastName || '').replace(/\s+/g, '');
+
+  return items.map(function(item, i) {
+    const row = {};
+    CSV_HEADERS.forEach(function(h) { row[h] = ''; });
+
+    const itemNum = item.itemnum || '';
+    const format = classroomResolvedFormat(item);
+    const voicingList = classroomResolvedVoicing(item);
+
+    row['Web clean title'] = c.title || '';
+    // Same bracketed sort suffix as Choral Octavo ([LastName#of#]) — Classroom/Choral
+    // cards are the same "one title, several format items" shape, so the position/
+    // total numbering applies the same way across this card's item list.
+    const sortSuffix = lastName
+      ? (' [' + lastName + (i + 1) + 'of' + total + ']')
+      : (' (' + (i + 1) + ' of ' + total + ')');
+    row['TitleForSorting'] = (c.sortKey || '') + sortSuffix;
+    row['Supertitle'] = c.supertitle || '';
+    row['Subtitle'] = c.subtitle || '';
+    row['Xitemnum'] = itemNum;
+
+    // Resolved with Matt 2026-09-01: Format -> WebFormat is NOT a clean 1:1 mapping in
+    // the source data (e.g. "Book" mapped to both 'Book' and 'Book\nDigital_Download'
+    // inconsistently across real records). Rather than guess at a lookup table,
+    // WebFormat passes the chosen Format straight through. Revisit if a real
+    // Format -> WebFormat mapping is wanted later.
+    row['WebFormat'] = format;
+
+    // Resolved with Matt 2026-09-01 (open question #4, option 1): WebProductType and
+    // WebProductSubType are filled in manually in FileMaker after import, same call
+    // as Piano's taxonomy fields.
+    row['WebProductType'] = '';
+    row['WebProductSubType'] = '';
+
+    // Matches the existing Choral Octavo convention — the overwhelming majority
+    // (155/164) of source records agree.
+    row['Product line'] = 'choral / vocal';
+
+    row['webdescription'] = sanitizeBlurb(c.long_blurb_final || '');
+    row['shortdescription'] = sanitizeBlurb(c.short_blurb_final || '');
+
+    row['instrument'] = 'Choir';
+    row['Instrumentation'] = '';
+
+    // Resolved with Matt 2026-09-01 (open question #3, option 2): FMcategory has its
+    // own dropdown on the card (5 real categories) — user picks explicitly per record.
+    row['FMcategory'] = c.fmCategory || '';
+    row['InfoBeforePrice'] = '';
+
+    row['Level'] = c.level || '';
+    // Resolved with Matt 2026-09-01: GradeNum/WebGrade manual in FileMaker, same call
+    // as Piano.
+    row['WebSubLevel'] = '';
+    row['GradeNum'] = '';
+    row['WebGrade'] = '';
+    row['RetailUpCode'] = '';
+
+    row['Duration'] = c.duration || '';
+    row['Series'] = c.series || '';
+    // SeriesBlurb was unused in 0/164 source records — left blank/manual (also
+    // blanked by EMPTY_FIELDS regardless).
+    row['SeriesBlurb'] = '';
+
+    // Tags — same convention as everywhere else: plain fields use '; ', Web* checkbox
+    // fields use '\r'.
+    row['Genre']              = [...c.tags.genre].map(function(v){ return v.replace(/_/g,' '); }).join('; ');
+    row['MusicalForm']        = [...c.tags.musicalForm].join('; ');
+    row['Special Features']   = [...c.tags.specialFeatures].join('; ');
+    row['Holiday']            = [...c.tags.holiday].join('; ');
+    row['WebSource']          = [...c.tags.webSource].join('\r');
+    row['Occasion']           = [...c.tags.occasion].join('; ');
+    row['Season']             = [...c.tags.season].join('; ');
+    row['Era']                = [...c.tags.era].join('; ');
+    row['WebGenre']           = [...c.tags.genre].join('\r');
+    row['WebMusicalForm']     = [...c.tags.musicalForm].join('\r');
+    row['WebSpecialFeatures'] = [...c.tags.specialFeatures].join('\r');
+    row['WebHoliday']         = [...c.tags.holiday].join('\r');
+    row['WebOccasion']        = [...c.tags.occasion].join('\r');
+    row['WebSeason']          = [...c.tags.season].join('\r');
+    row['WebEra']             = [...c.tags.era].join('\r');
+
+    row['Comp arr trans artist'] = c.creditLine || '';
+    row['ContributorHyperlink'] = c.contributors.filter(function(x){ return x.name; }).map(function(x){ return x.name; }).join('; ');
+    // Resolved with Matt 2026-09-01 (open question #2): always the last-listed
+    // contributor's last name, same rule as Band/Orch/Choral — no Piano-style
+    // composer/editor exception.
+    row['Ed catalog style'] = c.primaryLastName || '';
+
+    row['pubnum'] = '0';
+    row['Scan File Name'] = itemNum ? ('00-' + itemNum) : '';
+    row['itemnum'] = itemNum ? ('(' + itemNum + ')') : '';
+    // Resolved with Matt 2026-09-01 (open question #6): always Krista H. / always
+    // "Choral" for new records — the historical "Done"/"n/a" values in the source
+    // data are downstream production-status markers, not the initial routing tag.
+    row['PLS Assigned'] = 'Krista H.';
+    row['New Issue Codes Teams'] = 'Choral';
+
+    row['Brand'] = getBrand(c.series);
+    row['Format'] = format;
+    // Resolved with Matt 2026-09-01 (open question #7, option 1): Voicing supports
+    // multiple selections, joined the same way other plain multi-value text fields
+    // are joined elsewhere ('; ').
+    row['Voicing'] = voicingList.join('; ');
+    row['BTradeOutput'] = BTRADE_Y_FORMATS.has(format) ? 'y' : 'n';
+
+    return row;
+  });
+}
+
 const SHEET_CONTRIB_URL = 'https://docs.google.com/spreadsheets/d/1eu1xCW39jBJnqJiDmcSo8Sz_hrwHvO5M6emk9nRe6aw/edit?gid=0#gid=0';
 const SHEET_SERIES_URL  = 'https://docs.google.com/spreadsheets/d/1eu1xCW39jBJnqJiDmcSo8Sz_hrwHvO5M6emk9nRe6aw/edit?gid=319656041#gid=319656041';
 
@@ -4092,6 +4491,14 @@ function exportCSV() {
         if (EMPTY_FIELDS.has(h)) return '';
         return csvEscape(row[h] || '');
       }).join(','));
+    } else if (c.recordType === 'classroom') {
+      // One CSV row per item (format variant) — see buildClassroomRows.
+      buildClassroomRows(c).forEach(function(row) {
+        lines.push(CSV_HEADERS.map(function(h) {
+          if (EMPTY_FIELDS.has(h)) return '';
+          return csvEscape(row[h] || '');
+        }).join(','));
+      });
     } else {
       ['set', 'score'].forEach(function(itemType) {
         const row = contractToRow(c, itemType);
@@ -4256,6 +4663,31 @@ function exportContributorsCSV() {
           'PositionInHyperlink': String(idx + 1),
         };
         lines.push(CONTRIBUTOR_HEADERS.map(function(h){ return csvEscape(row[h] || ''); }).join(','));
+      });
+    } else if (c.recordType === 'classroom') {
+      // One contributor row per item (format variant) per contributor — same
+      // fan-out pattern as Choral Octavo above.
+      var classroomItems = (c.items && c.items.length) ? c.items : [makeBlankClassroomItem()];
+      var pubNumClassroom = parseInt(c.pub_num) || 0;
+      classroomItems.forEach(function(item) {
+        (c.contributors || []).forEach(function(contrib, idx) {
+          if (!contrib.name) return;
+          var parsed = parseName(contrib.name);
+          var fmRole = FM_ROLE_MAP[contrib.role] || contrib.role || 'Pending';
+          var row = {
+            'Pubnum':              String(pubNumClassroom),
+            'Itemnum':             item.itemnum || '',
+            'Role':                fmRole,
+            'FirstName':           parsed.firstName,
+            'MiddleNameOrInitial': parsed.middleName,
+            'LastName':            parsed.lastName,
+            'Suffix':              parsed.suffix,
+            'Prefix':              parsed.prefix,
+            'FullName':            contrib.name,
+            'PositionInHyperlink': String(idx + 1),
+          };
+          lines.push(CONTRIBUTOR_HEADERS.map(function(h){ return csvEscape(row[h] || ''); }).join(','));
+        });
       });
     } else {
       ['set', 'score'].forEach(function(itemType) {
